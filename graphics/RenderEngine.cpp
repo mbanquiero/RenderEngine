@@ -2,6 +2,8 @@
 #include "/dev/graphics/RenderEngine.h"
 #include "/dev/graphics/dx11device.h"
 #include "/dev/graphics/dx9device.h"
+#include "/dev/graphics/xstring.h"
+#include "/dev/graphics/TGCViewer.h"
 
 CRenderEngine::CRenderEngine()
 {
@@ -224,6 +226,7 @@ void CRenderEngine::ReleaseObj()
 
 CGraphicObject *CRenderEngine::CreateMesh(char *filename,D3DXVECTOR3 pos,D3DXVECTOR3 size,D3DXVECTOR3 rot)
 {
+
 	// Cargo el mesh pp dicho
 	int nro_mesh = LoadMesh(filename);
 	if(nro_mesh==-1)
@@ -250,107 +253,6 @@ CGraphicObject *CRenderEngine::CreateMesh(char *filename,D3DXVECTOR3 pos,D3DXVEC
 	return 	p_obj;
 }
 
-
-// helper
-char is_file(char *file_name)
-{
-	if(file_name==NULL || esta_vacio(file_name))
-		return 0;
-
-	FILE *fp;
-	char rta=1;
-	if((fp=fopen(file_name,"rt"))==NULL)
-		rta=0;
-	else
-		fclose(fp);
-	return(rta); 
-}
-
-// devuelve TRUE si el string esta vacio,
-// es decir si es "", o bien solo tiene espacios
-bool esta_vacio(char *s)
-{
-	bool rta;
-	if(s[0]==0)
-		rta = true;		// se trata de ""
-	else
-	if(s[0]!=32)
-		rta = false;	// no esta vacio
-	else
-	{
-		// empieza en espacios, pero puede llegar a 
-		// tener algo en el medio
-		rta = true;		// supongo que esta vacio
-		int i=0;
-		while(s[i] && rta)
-			if(s[i]!=32)
-				rta = false;		// no esta vacio
-			else
-				++i;
-	}
-	return rta;
-}
-
-void extension(char *file,char *ext)
-{
-	int i=0;
-
-	CString sFileName = (CString)file;
-	// Le saco la extension que tenia antes
-	// si es que tiene extension
-	if(sFileName.Find('.')!=-1)
-		sFileName = sFileName.Left(sFileName.ReverseFind('.'));
-
-	if(ext && ext[0])
-	{
-		// Ahora no tiene mas extension, le agrego la nueva
-		sFileName+=".";
-		sFileName+=ext;
-	}
-
-	// y lo almaceno en *file 
-	strcpy(file,(LPCSTR)sFileName);
-}
-
-char *rtrim(char *string)
-{
-	int l=strlen(string)-1;
-	while(l>=0 && (*(string+l)==' ' || *(string+l)=='\t'))
-	{
-		*(string+l)='\0';
-		--l;
-	}
-	return(string);
-}
-
-char *ltrim(char *string)
-{
-	int l = strlen(string);
-	char *buffer = new char[l+1];
-	int i=0;
-	while(string[i]==' ' || string[i]=='\t')
-		++i;
-	strcpy(buffer,string+i);
-	strcpy(string,buffer);
-	delete buffer;
-	return(string);
-}
-
-char *que_extension(char *file,char *ext)
-{
-	int t =0;
-	// busco el punto (empiezando desde atras)
-	char *p = strrchr(file,'.');
-	if(p!=NULL)
-	{
-		// salteo el punto
-		++p;
-		while(*p!=NULL)
-			ext[t++] = *p++;
-	}
-	ext[t] = '\0';
-	return ext;
-}
 
 
 /*
@@ -419,71 +321,37 @@ Vector3 CRenderEngine::que_punto(CPoint p)
 
 // Soporte de archivos xml
 #define BUFFER_SIZE  600000
-D3DXVECTOR3 ParserXMLVector3(char *buffer);
 
 bool CRenderEngine::LoadSceneFromXml(char *filename)
 {
-	FILE *fp = fopen(filename,"rt");
-	if(fp==NULL)
-		return 0;
 
-	// Leo y parseo el xml
-	int cant = 0;
-	char mesh_id[MAX_MESH][255];
-	memset(mesh_id,0,sizeof(mesh_id));
-	D3DXVECTOR3 mesh_pos[MAX_MESH];
+	CTGCMeshParser loader;
+	tgc_scene_mesh tgc_mesh_lst[MAX_MESH];
+	memset(tgc_mesh_lst,0,sizeof(tgc_mesh_lst));
+	int cant = loader.LoadSceneHeader(filename,tgc_mesh_lst);
 
-	char *buffer = new char[BUFFER_SIZE];
-	while(fgets(buffer,BUFFER_SIZE,fp)!=NULL)
-	{
-		ltrim(buffer);
-		if(strncmp(buffer,"<mesh name=" , 11)==0)
-		{
-
-			// busco la posicion 
-			char *p = strstr(buffer,"pos=");
-			if(p!=NULL)
-			{
-				D3DXVECTOR3 pos = ParserXMLVector3(p+6);
-				mesh_pos[cant].x = pos.x;
-				mesh_pos[cant].y = pos.z;
-				mesh_pos[cant].z = pos.y;
-				
-			}
-
-			// tomo el nombre del mesh
-			p = strchr(buffer+12,'\'');
-			if(p!=NULL)
-			{
-				*p = 0;
-				strcpy(mesh_id[cant],buffer+12);
-
-				++cant;
-			}
-		}
-	}
-	delete buffer,
-	fclose(fp);
+	if(!cant)
+		return false;
 
 	// Ahora tengo que cargar los mesh pp dichos.
 	ClearScene();
 
 	for(int i=0;i<cant;++i)
 	{
-		// Cargo el mesh 
-		CBaseMesh *p_mesh = device->LoadMeshFromXmlFile(this,filename,mesh_id[i]);
+		// Cargo el mesh , pero le indico que de todo el xml solo tiene que cargar ese mesh id y ese mat id
+		CBaseMesh *p_mesh = device->LoadMeshFromXmlFile(this,filename,tgc_mesh_lst[i].mesh_id,tgc_mesh_lst[i].mat_id);
 		if(p_mesh!=NULL)
 		{
 			// Corrijo el file name
 			strcat(p_mesh->fname," - ");
-			strcat(p_mesh->fname,mesh_id[i]);
+			strcat(p_mesh->fname,tgc_mesh_lst[i].mesh_id);
 			m_mesh[cant_mesh] = p_mesh;
 
 			CGraphicObject *p_obj = new CGraphicObject();
 			p_obj->M = this;
 			p_obj->nro_mesh = cant_mesh;
 			p_obj->tipo = 0;
-			p_obj->m_pos = mesh_pos[i] - p_mesh->m_size*0.5;
+			p_obj->m_pos = p_mesh->m_pos + p_mesh->m_size*0.5;
 			p_obj->m_size = p_mesh->m_size;
 			p_obj->m_rot = D3DXVECTOR3(0,0,0);
 			// Aprovecho para calcular la matriz de world de este objeto

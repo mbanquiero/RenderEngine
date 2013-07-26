@@ -1,8 +1,4 @@
 #pragma once
-
-#pragma pack(1)
-
-
 #include "C:\Program Files (x86)\Microsoft DirectX SDK (June 2010)\Include\d3dx10Math.h"
 #include "/dev/graphics/device.h"
 #include "/dev/graphics/Camera.h"
@@ -92,11 +88,4 @@ public:
 
 };
 
-// Helpers
-char is_file(char *file_name);
-bool esta_vacio(char *s);
-void extension(char *file,char *ext);
-char *rtrim(char *string);
-char *ltrim(char *string);
-char *que_extension(char *file,char *ext);
 bool IsSkeletalMesh(char *fname);

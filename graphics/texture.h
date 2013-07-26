@@ -1,5 +1,4 @@
 #pragma once
-#pragma pack(1)
 #include <d3d11.h>
 #include "C:\Program Files (x86)\Microsoft DirectX SDK (June 2010)\Include\dxgi.h"
 #include "C:\Program Files (x86)\Microsoft DirectX SDK (June 2010)\Include\d3dcommon.h"

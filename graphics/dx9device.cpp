@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "/dev/graphics/dx9device.h"
 #include "/dev/graphics/RenderEngine.h"
+#include "/dev/graphics/xstring.h"
 
 bool IsSkeletalMesh(char *fname);
 
@@ -103,7 +104,6 @@ void  CDX9Device::InitD3D(HWND hWnd)
 	far_plane = 50000;
 
 	transponer_matrices = false;
-
 }
 
 void CDX9Device::CleanD3D()
@@ -117,7 +117,6 @@ void CDX9Device::CleanD3D()
 	// Device
 	SAFE_RELEASE(g_pd3dDevice);
 	SAFE_RELEASE(g_pD3D);
-
 }
 
 
@@ -158,7 +157,6 @@ void CDX9Device::InitPipeline()
 	g_pd3dDevice->CreateVertexDeclaration(SKELETAL_VERTEX_DECL, &m_pSkeletalMeshVertexDeclaration);
 
 	//g_pd3dDevice->SetFVF( D3DFVF_XYZ|D3DFVF_NORMAL|D3DFVF_TEX1);
-
 }
 
 
@@ -191,7 +189,6 @@ void CDX9Device::EndRenderFrame()
 	// switch the back buffer and the front buffer
 	g_pd3dDevice->EndScene();
 	g_pd3dDevice->Present( NULL, NULL, NULL, NULL );
-
 }
 
 
@@ -239,12 +236,11 @@ void CDX9Device::SetShaderLighting()
 	g_pEffect->SetFloat( "g_LightPhi", cos(phi/2.0));
 	g_pEffect->SetFloat( "g_LightTheta", cos(theta/2.0));
 
-/*	g_pEffect->SetFloat( "k_la", shader_la);	// luz ambiente
-	g_pEffect->SetFloat( "k_ld", shader_ld);	// luz difusa
-	g_pEffect->SetFloat( "k_ls", shader_ls);	// luz specular
-	g_pEffect->SetFloat( "k_brightness", g_brillo);	
-	g_pEffect->SetFloat( "k_contrast", g_contraste);
-*/
+//	g_pEffect->SetFloat( "k_la", shader_la);	// luz ambiente
+//	g_pEffect->SetFloat( "k_ld", shader_ld);	// luz difusa
+//	g_pEffect->SetFloat( "k_ls", shader_ls);	// luz specular
+//	g_pEffect->SetFloat( "k_brightness", g_brillo);	
+//	g_pEffect->SetFloat( "k_contrast", g_contraste);
 
 }
 
@@ -265,6 +261,7 @@ CBaseTexture *CDX9Device::CreateTexture(char *fname)
 }
 
 
+
 CBaseMesh *CDX9Device::LoadMesh(CRenderEngine *p_engine, char *fname)
 {
 	CBaseMesh *p_mesh = NULL;
@@ -273,8 +270,9 @@ CBaseMesh *CDX9Device::LoadMesh(CRenderEngine *p_engine, char *fname)
 	bool ok;
 	if(ext[0]=='y' || ext[0]=='Y')
 	{
+
 		// Cargo un archivo fomrato .Y 
-		p_mesh = new CDX9Mesh;
+		p_mesh = (CBaseMesh *)new CDX9Mesh;
 		ok = ((CDX9Mesh *)p_mesh)->LoadFromFile(p_engine,this,fname);
 	}
 	else
@@ -294,14 +292,17 @@ CBaseMesh *CDX9Device::LoadMesh(CRenderEngine *p_engine, char *fname)
 		}
 	}
 
-	return ok?(CBaseMesh *)p_mesh : NULL;
+	if(!ok)
+		SAFE_DELETE(p_mesh);			// y p_mesh queda en NULL
+	return p_mesh;
+
 }
 
-CBaseMesh *CDX9Device::LoadMeshFromXmlFile(CRenderEngine *p_engine, char *fname,char *mesh_name)
+CBaseMesh *CDX9Device::LoadMeshFromXmlFile(CRenderEngine *p_engine, char *fname,char *mesh_name,int mat_id)
 {
 	CBaseMesh *p_mesh = NULL;
 	p_mesh = new CDX9Mesh;
-	bool ok = ((CDX9Mesh *)p_mesh)->LoadFromXMLFile(p_engine,this,fname,mesh_name);
+	bool ok = ((CDX9Mesh *)p_mesh)->LoadFromXMLFile(p_engine,this,fname,mesh_name,mat_id);
 
 	if(!ok)
 		SAFE_DELETE(p_mesh);			// y p_mesh queda en NULL

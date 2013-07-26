@@ -1,5 +1,4 @@
 #pragma once
-#pragma pack(1)
 #include <d3d11.h>
 #include "C:\Program Files (x86)\Microsoft DirectX SDK (June 2010)\Include\dxgi.h"
 #include "C:\Program Files (x86)\Microsoft DirectX SDK (June 2010)\Include\d3dcommon.h"
@@ -22,9 +21,10 @@ typedef struct MESH_LAYER {
 	int nro_textura;			// Nro de textura en el pool
 	int start_index;
 	int cant_indices;
+	char texture_name[MAX_PATH];		// diffuse map
 } MESH_LAYER;
 
-#define MAX_MESH_LAYERS			256
+#define MAX_MESH_LAYERS			32
 
 
 struct MESH_VERTEX
@@ -39,44 +39,47 @@ class CBaseMesh
 public:
 	D3DXVECTOR3 m_pos;
 	D3DXVECTOR3 m_size;
-	unsigned long cant_faces;
-	unsigned long cant_vertices;
+	DWORD cant_faces;
+	DWORD cant_vertices;
+	int cant_indices;
 	int bpv;
-	unsigned long start_vertex;
-	unsigned long start_index;
+	DWORD start_vertex;
+	DWORD start_index;
 	char fname[MAX_PATH];
 	char mesh_id[255];
 	MESH_LAYER layers[MAX_MESH_LAYERS];
 	int cant_layers;
+	// Internal Data
+	MESH_VERTEX *pVertices;
+	DWORD *pIndices;
+	DWORD *pAttributes;
 
 	CDevice *device;
 	CRenderEngine *engine;
 
-	// Data auxiliar para el xml parser
-	int *coordinatesIdx;
-	int *textCoordsIdx;
-	int *matIds;
-	FLOAT *vertices;
-	FLOAT *normals;
-	FLOAT *texCoords;
-	int xml_current_tag;
-	int xml_current_layer;
-	bool xml_multimaterial;
-	char path_texturas[MAX_PATH];
 	
 	CBaseMesh();
 	virtual ~CBaseMesh() = 0;
+	virtual void ReleaseInternalData();		// Libera los datos internos, una vez que los Buffers del device estan creados no tiene sentido mantenar esos datos del mesh
+
+	virtual D3DXVECTOR3 pos_vertice(int i) { return pVertices!=NULL ? pVertices[i].position : D3DXVECTOR3(0,0,0);};			// Abstraccion de las posiciones
+	virtual bool hay_internal_data() { return pVertices!=NULL ? true : false;};
+
 	virtual void Draw() = 0;
 	virtual void SetVertexDeclaration() = 0;
 	virtual void SetShaders() = 0;
+	virtual bool ComputeBoundingBox();
 
-	virtual bool LoadFromXMLFile(CRenderEngine *p_engine,CDevice *p_device,char *filename,char *mesh_name=NULL);
-	virtual char ParserXMLLine(char *buffer);
-	virtual bool CreateFromXMLData() = 0;
+	virtual bool LoadDataFromFile(char *filename);		// Carga los datos del mesh, esto es independiente del device
+	virtual bool LoadFromFile(CRenderEngine *p_engine,CDevice *p_device,char *filename,bool keepData=false);
+
+	virtual bool LoadFromXMLFile(CRenderEngine *p_engine,CDevice *p_device,char *filename,
+		char *mesh_name=NULL,int mesh_mat_id=-1);
+	
+	virtual bool CreateMeshFromData(CRenderEngine *p_engine,CDevice *p_device) = 0;		// Crea el mesh pp dicho desde los datos internos
 
 
 };
-
 
 
 
@@ -85,12 +88,10 @@ class CDX11Mesh : public CBaseMesh
 public:
 	ID3D11Buffer *m_vertexBuffer, *m_indexBuffer;
 
-
 	CDX11Mesh();
 	virtual ~CDX11Mesh();
+	virtual bool CreateMeshFromData(CRenderEngine *p_engine,CDevice *p_device);					// Crea el mesh pp dicho desde los datos internos
 
-	virtual bool LoadFromFile(CRenderEngine *p_engine,CDX11Device *p_device,char *filename);
-	virtual bool CreateFromXMLData();
 	virtual void SetVertexDeclaration();
 	virtual void SetShaders();
 
@@ -111,9 +112,9 @@ public:
 	CDX9Mesh();
 	virtual ~CDX9Mesh();
 
+	virtual bool CreateMeshFromData(CRenderEngine *p_engine,CDevice *p_device);					// Crea el mesh pp dicho desde los datos internos
+
 	virtual void Release();
-	virtual bool LoadFromFile(CRenderEngine *p_engine,CDX9Device *p_device,char *filename);
-	virtual bool CreateFromXMLData();
 	virtual void SetVertexDeclaration();
 	virtual void SetShaders();
 

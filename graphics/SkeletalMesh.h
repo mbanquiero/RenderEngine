@@ -1,5 +1,4 @@
 #pragma once
-#pragma pack(1)
 #include "mesh.h"
 
 #define MAX_BONES		26
@@ -69,7 +68,7 @@ class CSkeletalAnimation
 
 		CSkeletalAnimation();
 		bool CreateFromFile(char *fname);
-		virtual bool ParserXMLLine(char *buffer);
+		virtual bool ParseXMLLine(char *buffer);
 
 
 
@@ -87,6 +86,10 @@ struct vertexWeight
 class CBaseSkeletalMesh : public CBaseMesh
 {
 public:
+
+	// Internal Data
+	SKELETAL_MESH_VERTEX *pVertices;
+
 	int cant_bones;
 	CSkeletalBone bones[MAX_BONES];
 
@@ -116,14 +119,18 @@ public:
 
 	CBaseSkeletalMesh();
 	virtual ~CBaseSkeletalMesh();
+	virtual void ReleaseInternalData();		// Libera los datos internos, una vez que los Buffers del device estan creados no tiene sentido mantenar esos datos del mesh
+
+	// ojo que pVertices es CSkeletal::pVertices, que sobrecarga CBaseMesh::pVertices
+	virtual D3DXVECTOR3 pos_vertice(int i) { return pVertices!=NULL ? pVertices[i].position : D3DXVECTOR3(0,0,0);};			// Abstraccion de las posiciones
+	virtual bool hay_internal_data() { return pVertices!=NULL ? true : false;};
+
 	virtual void SetVertexDeclaration() = 0;
 	virtual void SetShaders() = 0;
 	virtual void Draw() = 0;
 
 
 	virtual bool LoadFromXMLFile(CRenderEngine *p_engine,CDevice *p_device,char *filename);
-	virtual char ParserXMLLine(char *buffer);
-	virtual bool CreateFromXMLData() = 0;
 
 	// animaciones
 	bool LoadAnimation(char *fname);
@@ -144,12 +151,12 @@ public:
 	ID3D11Buffer *m_vertexBuffer, *m_indexBuffer;
 	CDX11SkeletalMesh();
 	virtual ~CDX11SkeletalMesh();
+	virtual bool CreateMeshFromData(CRenderEngine *p_engine,CDevice *p_device);					// Crea el mesh pp dicho desde los datos internos
 	virtual void Release();
 	virtual void SetVertexDeclaration();
 	virtual void SetShaders();
 	virtual void Draw();
 	virtual void DrawSubset(int i);
-	virtual bool CreateFromXMLData();
 
 };
 
@@ -164,11 +171,12 @@ public:
 
 	CDX9SkeletalMesh();
 	virtual ~CDX9SkeletalMesh();
+	virtual bool CreateMeshFromData(CRenderEngine *p_engine,CDevice *p_device);					// Crea el mesh pp dicho desde los datos internos
+
 	virtual void Release();
 	virtual void SetVertexDeclaration();
 	virtual void SetShaders();
 	virtual void Draw();
 	virtual void DrawSubset(int i);
-	virtual bool CreateFromXMLData();
 
 };

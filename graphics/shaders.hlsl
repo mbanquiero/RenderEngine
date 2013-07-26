@@ -98,7 +98,7 @@ float4 PShader(VS_OUTPUT Input) : SV_TARGET
 
 	// 3- suma luz diffusa + ambient + specular
 	float3 color = base_color.xyz*(saturate(k_la+LightDiffuse)) + LightSpecular;
-	return float4(color,1);
+	return float4(color.xyz,1);
 }
 
 

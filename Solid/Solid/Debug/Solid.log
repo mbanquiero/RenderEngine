@@ -1,10 +1,12 @@
-﻿Compilación iniciada a las 24/07/2013 1:31:40.
+﻿Compilación iniciada a las 26/07/2013 1:03:26.
      1>Proyecto "C:\dev\Solid\Solid\Solid.vcxproj" en el nodo 2 (Build destinos).
      1>ClCompile:
-         C:\Program Files (x86)\Microsoft Visual Studio 11.0\VC\bin\CL.exe /c /ZI /nologo /W3 /WX- /Od /Oy- /D _CRT_SECURE_NO_WARNINGS /D WIN32 /D _WINDOWS /D _DEBUG /D _MBCS /Gm /EHsc /RTC1 /MTd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Yu"stdafx.h" /Fp"Debug\Solid.pch" /Fo"Debug\\" /Fd"Debug\vc110.pdb" /Gd /TP /analyze- /errorReport:prompt ..\..\graphics\RenderEngine.cpp
-         RenderEngine.cpp
+         C:\Program Files (x86)\Microsoft Visual Studio 11.0\VC\bin\CL.exe /c /ZI /nologo /W3 /WX- /Od /Oy- /D _CRT_SECURE_NO_WARNINGS /D WIN32 /D _WINDOWS /D _DEBUG /D _MBCS /Gm /EHsc /RTC1 /MTd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Yu"stdafx.h" /Fp"Debug\Solid.pch" /Fo"Debug\\" /Fd"Debug\vc110.pdb" /Gd /TP /analyze- /errorReport:prompt ..\..\graphics\dx9device.cpp
+         dx9device.cpp
+     1>c:\dev\graphics\dx9device.cpp(28): warning C4101: 'hr' : variable local sin referencia
+     1>c:\dev\graphics\dx9device.cpp(227): warning C4305: 'inicializando' : truncamiento de 'double' a 'float'
        Link:
-         C:\Program Files (x86)\Microsoft Visual Studio 11.0\VC\bin\link.exe /ERRORREPORT:PROMPT /OUT:"C:\dev\Solid\Debug\Solid.exe" /INCREMENTAL /NOLOGO /LIBPATH:"C:\Program Files (x86)\Microsoft DirectX SDK (June 2010)\Lib\x86" d3dcompiler.lib d3dx11d.lib d3dx9d.lib dxerr.lib dxguid.lib winmm.lib comctl32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /manifestinput:"C:\Program Files (x86)\Microsoft Visual Studio 11.0\VC\Include\Manifest\dpiaware.manifest" /DEBUG /PDB:"C:\dev\Solid\Debug\Solid.pdb" /SUBSYSTEM:WINDOWS /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"C:\dev\Solid\Debug\Solid.lib" /MACHINE:X86 Debug\Solid.res
+         C:\Program Files (x86)\Microsoft Visual Studio 11.0\VC\bin\link.exe /ERRORREPORT:PROMPT /OUT:"C:\dev\Solid\Debug\Solid.exe" /INCREMENTAL /NOLOGO /LIBPATH:"C:\Program Files (x86)\Microsoft DirectX SDK (June 2010)\Lib\x86" d3dcompiler.lib d3dx11d.lib d3dx9d.lib dxerr.lib dxguid.lib winmm.lib comctl32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /manifestinput:"C:\Program Files (x86)\Microsoft Visual Studio 11.0\VC\Include\Manifest\dpiaware.manifest" /DEBUG /PDB:"C:\dev\Solid\Debug\Solid.pdb" /SUBSYSTEM:WINDOWS /HEAP:"0xb00000" /STACK:"0xb00000" /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"C:\dev\Solid\Debug\Solid.lib" /MACHINE:X86 Debug\Solid.res
          Debug\Camera.obj
          Debug\dx11device.obj
          Debug\dx9device.obj
@@ -13,7 +15,9 @@
          Debug\RenderEngine.obj
          Debug\SkeletalMesh.obj
          Debug\texture.obj
+         Debug\TGCViewer.obj
          Debug\Vectores.obj
+         Debug\xstring.obj
          Debug\MainFrm.obj
          Debug\Solid.obj
          Debug\SolidDoc.obj
@@ -29,4 +33,4 @@
 
 Build succeeded.
 
-Tiempo transcurrido 00:00:00.74
+Tiempo transcurrido 00:00:00.91

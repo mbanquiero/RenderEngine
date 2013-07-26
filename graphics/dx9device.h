@@ -1,7 +1,5 @@
 #pragma once
 
-#pragma pack(1)
-
 #include "C:\Program Files (x86)\Microsoft DirectX SDK (June 2010)\Include\d3dx9.h"
 #include "/dev/graphics/Camera.h"
 #include "/dev/graphics/mesh.h"
@@ -44,9 +42,10 @@ public:
 
 	virtual CBaseTexture *CreateTexture(char *fname);
 	virtual CBaseMesh *LoadMesh(CRenderEngine *p_engine, char *fname);
-	virtual CBaseMesh *LoadMeshFromXmlFile(CRenderEngine *p_engine, char *fname,char *mesh_name);
+	virtual CBaseMesh *LoadMeshFromXmlFile(CRenderEngine *p_engine, char *fname,char *mesh_name,int mat_id);
 
 	HRESULT LoadFx(ID3DXEffect** ppEffect,char *fx_file);
 
-
 };
+
+

@@ -15,9 +15,13 @@
 #include "/dev/graphics/RenderEngine.h"
 #include "/dev/graphics/vectores.h"
 #include "/dev/graphics/SkeletalMesh.h"
+#include "/dev/graphics/dx9device.h"
+
 CRenderEngine escena;
 CDX11SkeletalMesh *p_robot = NULL;
-	//, escena2;
+int _VERSION_DX = DEVICE_DX9;
+int _nro_ejemplo = 1;
+
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -55,7 +59,7 @@ END_MESSAGE_MAP()
 CSolidView::CSolidView()
 {
 	eventoInterno = EV_NADA;
-	version_dx = DEVICE_DX11;
+	version_dx = _VERSION_DX;
 }
 
 CSolidView::~CSolidView()
@@ -153,46 +157,45 @@ CSolidDoc* CSolidView::GetDocument() const // La versión de no depuración es en 
 
 void CSolidView::ArmarEscena()
 {
+	
+
 	if(escena.IsReady())
 		escena.CleanD3D();
 	escena.Create(m_hWnd,version_dx);
-	//escena.LoadTexture("/dev/media/cerezo.jpg");
-	//escena.LoadTexture("/dev/media/tecid57.jpg");
-	//for(int i = 0; i< 20 ; ++i)
-	//	escena.CreateMesh("/dev/media/PERSONA003.y",D3DXVECTOR3(-4000 + i*400,1700/2,0),D3DXVECTOR3(500,1700,700));
-	//escena.CreateMesh("/dev/media/piso.y",D3DXVECTOR3(0,-100,0),D3DXVECTOR3(10000,100,10000));
-	if(0)
+
+	switch(_nro_ejemplo)
 	{
-		// Ejemplo mesh camion
-		escena.CreateMesh("C:/TgcViewer/Examples/Media/MeshCreator/Meshes/Vehiculos/CamionDeAgua/CamionDeAgua-TgcScene.xml",
-			D3DXVECTOR3(0,-100,0),D3DXVECTOR3(900,1800,600));
-	}
-	else
-	{
-		// ejemplo robot
-		//CGraphicObject *p_obj = escena.CreateMesh("C:/TgcViewer/Examples/Media/SkeletalAnimations/Robot/Robot-TgcSkeletalMesh.xml",D3DXVECTOR3(0,-100,0));
-		CGraphicObject *p_obj = escena.CreateMesh("C:/TgcViewer/Examples/Media/SkeletalAnimations/BasicHuman/WomanJeans-TgcSkeletalMesh.xml",D3DXVECTOR3(0,-100,0));
-		if(p_obj!=NULL)
-		{
-			p_obj->Scale(50);
-			//TODO: Desglozar la malla del objeto pp dicho en la animacion
-			p_robot = (CDX11SkeletalMesh *)escena.m_mesh[p_obj->nro_mesh];
-			p_robot->initAnimation(0,true,30);
-		}
+		case 0 :
+			// ejemplo focus
+			/*
+			escena.LoadTexture("/dev/media/cerezo.jpg");
+			escena.LoadTexture("/dev/media/tecid57.jpg");
+			for(int i = 0; i< 20 ; ++i)
+				escena.CreateMesh("/dev/media/PERSONA003.y",D3DXVECTOR3(-4000 + i*400,1700/2,0),D3DXVECTOR3(500,1700,700));
+			*/
+			escena.CreateMesh("/dev/media/piso.y",D3DXVECTOR3(0,-100,0),D3DXVECTOR3(10000,100,10000));
+			break;
+		case 1:
+			// Ejemplo mesh camion
+			escena.CreateMesh("C:/TgcViewer/Examples/Media/MeshCreator/Meshes/Vehiculos/CamionDeAgua/CamionDeAgua-TgcScene.xml",
+				D3DXVECTOR3(0,-100,0),D3DXVECTOR3(900,1800,600));
+			break;
+		case 2:
+			// ejemplo robot
+			//CGraphicObject *p_obj = escena.CreateMesh("C:/TgcViewer/Examples/Media/SkeletalAnimations/Robot/Robot-TgcSkeletalMesh.xml",D3DXVECTOR3(0,-100,0));
+			CGraphicObject *p_obj = escena.CreateMesh("C:/TgcViewer/Examples/Media/SkeletalAnimations/BasicHuman/WomanJeans-TgcSkeletalMesh.xml",D3DXVECTOR3(0,-100,0));
+			if(p_obj!=NULL)
+			{
+				p_obj->Scale(50);
+				//TODO: Desglozar la malla del objeto pp dicho en la animacion
+				p_robot = (CDX11SkeletalMesh *)escena.m_mesh[p_obj->nro_mesh];
+				p_robot->initAnimation(0,true,30);
+			}
+			break;
 	}
 	escena.rot_camera.LF = Vector3(300, 4000, -4500);
 	escena.rot_camera.LA = Vector3(0, 500, 0);
 
-	/*
-	escena2.Create(wnd_2.m_hWnd,1);
-	escena2.LoadTexture("/dev/media/cerezo.jpg");
-	escena2.LoadTexture("/dev/media/tecid57.jpg");
-	for(int i = 0; i< 20 ; ++i)
-		escena2.CreateMesh("/dev/media/PERSONA003.y",D3DXVECTOR3(-4000 + i*400,1700/2,0),D3DXVECTOR3(500,1700,700));
-	escena2.CreateMesh("/dev/media/piso.y",D3DXVECTOR3(0,-100,0),D3DXVECTOR3(10000,100,10000));
-	escena2.rot_camera.LF = Vector3(300, 4000, -4500);
-	escena2.rot_camera.LA = Vector3(0, 500, 0);
-	*/
 
 }
 
@@ -265,20 +268,22 @@ void CSolidView::QueryFPS()
 					break;
 
 				case '1':
-					if(escena.cant_obj)
+					// Agrandar todos los objetos
+					for(int i=0;i<escena.cant_obj;++i)
 					{
-						// Agrandar objeto
-						CGraphicObject *p_obj = escena.m_obj[0];
+						CGraphicObject *p_obj = escena.m_obj[i];
 						p_obj->Scale(1.1);
+						p_obj->m_pos = p_obj->m_pos*1.1;
 					}
 					break;
 
 				case '2':
-					if(escena.cant_obj)
+					// achicar todos los objetos
+					for(int i=0;i<escena.cant_obj;++i)
 					{
-						// achicar objeto
-						CGraphicObject *p_obj = escena.m_obj[0];
+						CGraphicObject *p_obj = escena.m_obj[i];
 						p_obj->Scale(0.9);
+						p_obj->m_pos = p_obj->m_pos*0.9;
 					}
 					break;
 

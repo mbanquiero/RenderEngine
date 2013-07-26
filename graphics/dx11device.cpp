@@ -2,6 +2,7 @@
 #include "/dev/graphics/dx11device.h"
 #include <d3dcompiler.h>
 #include "/dev/graphics/renderengine.h"
+#include "/dev/graphics/xstring.h"
 
 bool IsSkeletalMesh(char *fname);
 
@@ -385,7 +386,6 @@ CBaseTexture *CDX11Device::CreateTexture(char *fname)
 
 CBaseMesh *CDX11Device::LoadMesh(CRenderEngine *p_engine, char *fname)
 {
-	//CDX11SkeletalMesh *p_mesh = new CDX11SkeletalMesh;
 	CBaseMesh *p_mesh = NULL;
 	char ext[4];
 	que_extension(fname,ext);
@@ -415,16 +415,15 @@ CBaseMesh *CDX11Device::LoadMesh(CRenderEngine *p_engine, char *fname)
 
 	if(!ok)
 		SAFE_DELETE(p_mesh);			// y p_mesh queda en NULL
-
 	return p_mesh;
 }
 
 
-CBaseMesh *CDX11Device::LoadMeshFromXmlFile(CRenderEngine *p_engine, char *fname,char *mesh_name)
+CBaseMesh *CDX11Device::LoadMeshFromXmlFile(CRenderEngine *p_engine, char *fname,char *mesh_name,int mat_id)
 {
 	CBaseMesh *p_mesh = NULL;
 	p_mesh = new CDX11Mesh;
-	bool ok = ((CDX11Mesh *)p_mesh)->LoadFromXMLFile(p_engine,this,fname,mesh_name);
+	bool ok = ((CDX11Mesh *)p_mesh)->LoadFromXMLFile(p_engine,this,fname,mesh_name,mat_id);
 
 	if(!ok)
 		SAFE_DELETE(p_mesh);			// y p_mesh queda en NULL
