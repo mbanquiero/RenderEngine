@@ -10,7 +10,7 @@
 // Carga un mesh desde el formato xml del TGC viewer. 
 // Si el xml tiene una escena completa carga solo el primer mesh, o bien el mesh con el nombre que le paso como parametro
 
-bool CTGCMeshParser::LoadMesh(CBaseMesh *p_mesh,char *filename,char *mesh_name,int mesh_mat_id)
+bool CTGCMeshParser::LoadMesh(CMesh *p_mesh,char *filename,char *mesh_name,int mesh_mat_id)
 {
 	FILE *fp = fopen(filename,"rt");
 	if(fp==NULL)
@@ -623,7 +623,7 @@ int CTGCMeshParser::LoadSceneHeader(char *filename,tgc_scene_mesh mesh_lst[])
 }
 
 
-bool CTGCSkeletalMeshParser::LoadSkeletalMesh(CBaseSkeletalMesh *p_mesh,char *filename)
+bool CTGCSkeletalMeshParser::LoadSkeletalMesh(CSkeletalMesh *p_mesh,char *filename)
 {
 	FILE *fp = fopen(filename,"rt");
 	if(fp==NULL)
@@ -688,7 +688,7 @@ char CTGCSkeletalMeshParser::ParseXMLLine(char *buffer)
 	
 	char procesada = 0;
 
-	CBaseSkeletalMesh *p_mesh = (CBaseSkeletalMesh *)M;
+	CSkeletalMesh *p_mesh = (CSkeletalMesh *)M;
 	
 	if(strncmp(buffer,"<binormals count=" , 17)==0)
 	{
@@ -809,7 +809,7 @@ char CTGCSkeletalMeshParser::ParseXMLLine(char *buffer)
 
 void CTGCSkeletalMeshParser::CreateMeshData()
 {
-	CBaseSkeletalMesh *p_mesh = (CBaseSkeletalMesh *)M;
+	CSkeletalMesh *p_mesh = (CSkeletalMesh *)M;
 
 	// Cargo la estructura de vertices
 	int cant_vertices = p_mesh->cant_vertices;

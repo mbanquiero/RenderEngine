@@ -83,7 +83,7 @@ struct vertexWeight
 };
 
 
-class CBaseSkeletalMesh : public CBaseMesh
+class CSkeletalMesh : public CMesh
 {
 public:
 
@@ -115,22 +115,24 @@ public:
 	FLOAT *tangents;
 	vertexWeight *aux_verticesWeights;
 
+	// Dx9
+	LPDIRECT3DVERTEXBUFFER9 m_vertexBuffer;	
+	LPDIRECT3DINDEXBUFFER9 m_indexBuffer;	
 
 
-	CBaseSkeletalMesh();
-	virtual ~CBaseSkeletalMesh();
+	CSkeletalMesh();
+	virtual ~CSkeletalMesh();
 	virtual void ReleaseInternalData();		// Libera los datos internos, una vez que los Buffers del device estan creados no tiene sentido mantenar esos datos del mesh
 
 	// ojo que pVertices es CSkeletal::pVertices, que sobrecarga CBaseMesh::pVertices
 	virtual D3DXVECTOR3 pos_vertice(int i) { return pVertices!=NULL ? pVertices[i].position : D3DXVECTOR3(0,0,0);};			// Abstraccion de las posiciones
 	virtual bool hay_internal_data() { return pVertices!=NULL ? true : false;};
 
-	virtual void SetVertexDeclaration() = 0;
-	virtual void SetShaders() = 0;
-	virtual void Draw() = 0;
+	virtual void SetVertexDeclaration();
+	virtual void SetShaders();
+	virtual void Draw();
+	virtual void DrawSubset(int i);
 
-
-	virtual bool LoadFromXMLFile(CRenderEngine *p_engine,CDevice *p_device,char *filename);
 
 	// animaciones
 	bool LoadAnimation(char *fname);
@@ -141,42 +143,9 @@ public:
 	void updateSkeleton();
 	int getCurrentFrameBone(st_bone_animation *boneFrames, float currentFrame);
 
-};
-
-
-class CDX11SkeletalMesh : public CBaseSkeletalMesh
-{
-public:
-
-	ID3D11Buffer *m_vertexBuffer, *m_indexBuffer;
-	CDX11SkeletalMesh();
-	virtual ~CDX11SkeletalMesh();
-	virtual bool CreateMeshFromData(CRenderEngine *p_engine,CDevice *p_device);					// Crea el mesh pp dicho desde los datos internos
+	virtual bool LoadFromXMLFile(CRenderEngine *p_engine,char *filename);
+	virtual bool CreateMeshFromData(CRenderEngine *p_engine);					// Crea el mesh pp dicho desde los datos internos
 	virtual void Release();
-	virtual void SetVertexDeclaration();
-	virtual void SetShaders();
-	virtual void Draw();
-	virtual void DrawSubset(int i);
 
-};
-
-
-
-class CDX9SkeletalMesh : public CBaseSkeletalMesh
-{
-public:
-
-	LPDIRECT3DVERTEXBUFFER9 m_vertexBuffer;	
-	LPDIRECT3DINDEXBUFFER9 m_indexBuffer;	
-
-	CDX9SkeletalMesh();
-	virtual ~CDX9SkeletalMesh();
-	virtual bool CreateMeshFromData(CRenderEngine *p_engine,CDevice *p_device);					// Crea el mesh pp dicho desde los datos internos
-
-	virtual void Release();
-	virtual void SetVertexDeclaration();
-	virtual void SetShaders();
-	virtual void Draw();
-	virtual void DrawSubset(int i);
 
 };

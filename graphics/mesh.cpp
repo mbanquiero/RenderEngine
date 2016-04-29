@@ -1,36 +1,36 @@
 #include "stdafx.h"
 #include "/dev/graphics/mesh.h"
-#include "/dev/graphics/device.h"
-#include "/dev/graphics/dx11device.h"
-#include "/dev/graphics/dx9device.h"
 #include "/dev/graphics/RenderEngine.h"
 #include "/dev/graphics/TGCViewer.h"
+#include "/dev/graphics/xstring.h"
 
 #define BUFFER_SIZE  600000
 
-CBaseMesh::CBaseMesh()
+CMesh::CMesh()
 {
 	cant_faces = 0;
-	start_index = 0;
 	strcpy(fname,"");
 	strcpy(mesh_id,"");
-	device = NULL;
 	engine = NULL;
 	bpv = sizeof(MESH_VERTEX);					// valor por defecto del stride para mesh comunes
 	cant_layers = 0;
 	memset(layers,0,sizeof(layers));
 	pVertices = NULL;
 	pIndices = NULL;
+	// dx9
+	m_vertexBuffer = NULL;
+	m_indexBuffer = NULL;
 
 }
 
-CBaseMesh::~CBaseMesh()
+CMesh::~CMesh()
 {
 	ReleaseInternalData();
+	Release();
 }
 
 // Libera los datos internos, una vez que los Buffers del device estan creados no tiene sentido mantenar esos datos del mesh
-void CBaseMesh::ReleaseInternalData()
+void CMesh::ReleaseInternalData()
 {
 	if(pVertices!=NULL)
 	{
@@ -52,10 +52,59 @@ void CBaseMesh::ReleaseInternalData()
 }
 
 
+void CMesh::Release()
+{
+	SAFE_RELEASE(m_vertexBuffer);
+	SAFE_RELEASE(m_indexBuffer);
+}
+
+void CMesh::CalcularMatriz(D3DXVECTOR3 pos , D3DXVECTOR3 size , D3DXVECTOR3 rot, D3DXMATRIX *matWorld)
+{
+	D3DXMatrixIdentity(matWorld);
+
+	// determino la escala del objeto, (para que el mesh ocupe exactamente el tamaño del objeto)
+	// si tiene cero el size del objeto, usa el del mesh
+	float sx = m_size.x;
+	float sy = m_size.y;
+	float sz = m_size.z;
+	float kx = sx && size.x?size.x/sx:1;
+	float ky = sy && size.y?size.y/sy:1;
+	float kz = sz && size.z?size.z/sz:1;
+
+	// 1- lo llevo al cero en el espacio del objeto pp dicho
+	// La traslacion T0 hace que el centro del objeto quede en el cero
+	// size = tamaño y P0 punto inicial, en coordenadas del objeto. 
+	D3DXMATRIXA16 T0;
+	D3DXMatrixTranslation(&T0,-m_pos.x-sx/2,-m_pos.y-sy/2,-m_pos.z-sz/2);
+	D3DXMatrixMultiply(matWorld,matWorld,&T0);
+
+	// 2- lo escalo
+	D3DXMATRIXA16 Es;
+	D3DXMatrixScaling(&Es,kx,ky,kz);
+	D3DXMatrixMultiply(matWorld,matWorld,&Es);
+
+	// 3- lo roto
+	D3DXMATRIXA16 Rx,Ry,Rz;
+	D3DXMatrixRotationZ(&Rz,rot.z);
+	D3DXMatrixRotationY(&Ry,rot.y);
+	D3DXMatrixRotationX(&Rx,rot.x);
+	D3DXMatrixMultiply(matWorld,matWorld,&Rx);
+	D3DXMatrixMultiply(matWorld,matWorld,&Ry);
+	D3DXMatrixMultiply(matWorld,matWorld,&Rz);
+
+	// 4- Lo traslado a la posicion final
+	D3DXMATRIXA16 T;
+	D3DXMatrixTranslation(&T,pos.x,pos.y,pos.z);
+	D3DXMatrixMultiply(matWorld,matWorld,&T);
+
+}
+
+
+
 // Carga internal data con los datos de un archivo Lepton .Y 
 // Solo carga estructuras internas, no genera ningun mesh. Para generar el mesh hay que llamar a LoadFromFile
 // y ahi se necesita un device y un engine concretos
-bool CBaseMesh::LoadDataFromFile(char *filename)
+bool CMesh::LoadDataFromFile(char *filename)
 {
 	FILE *fp = fopen(filename,"rb");
 	if(fp==NULL)
@@ -99,8 +148,6 @@ bool CBaseMesh::LoadDataFromFile(char *filename)
 		layers[i].kr = g_pMeshMaterials.Emissive.r;
 		layers[i].kt = g_pMeshMaterials.Emissive.g;
 		strcpy(layers[i].texture_name,texture_name);
-		// Cargo la textura en el pool (o obtengo el nro de textura si es que ya estaba)
-		//layers[i].nro_textura = p_engine->LoadTexture(texture_name);
 	}
 
 	// Cantidad de caras
@@ -146,7 +193,7 @@ bool CBaseMesh::LoadDataFromFile(char *filename)
 }
 
 
-bool CBaseMesh::ComputeBoundingBox()
+bool CMesh::ComputeBoundingBox()
 {
 	if(!cant_vertices || !hay_internal_data())
 		return false;
@@ -177,7 +224,7 @@ bool CBaseMesh::ComputeBoundingBox()
 }
 
 
-bool CBaseMesh::LoadFromFile(CRenderEngine *p_engine,CDevice *p_device,char *filename,bool keepData)
+bool CMesh::LoadFromFile(CRenderEngine *p_engine,char *filename,bool keepData)
 {
 	// Uso la clase base para cargar los datos internos (son los mismos sea cual fuera la implementacion grafica)
 	// por eso LoadDataFromFile no requiere ni engine ni device
@@ -185,7 +232,7 @@ bool CBaseMesh::LoadFromFile(CRenderEngine *p_engine,CDevice *p_device,char *fil
 		return false;
 
 	// Creo el mesh pp dicho
-	if(!CreateMeshFromData(p_engine,(CDX11Device *)p_device))
+	if(!CreateMeshFromData(p_engine))
 		return false;
 
 	if(!keepData)
@@ -194,7 +241,6 @@ bool CBaseMesh::LoadFromFile(CRenderEngine *p_engine,CDevice *p_device,char *fil
 			ReleaseInternalData();
 
 	// Actualizo otros datos internos
-	device = p_device;
 	engine = p_engine;
 	strcpy(fname,filename);
 	return true;
@@ -202,13 +248,13 @@ bool CBaseMesh::LoadFromFile(CRenderEngine *p_engine,CDevice *p_device,char *fil
 
 // Carga un mesh desde el formato xml del TGC viewer. 
 // Si el xml tiene una escena completa carga solo el primer mesh, o bien el mesh con el nombre que le paso como parametro
-bool CBaseMesh::LoadFromXMLFile(CRenderEngine *p_engine,CDevice *p_device,char *filename,char *mesh_name,int mesh_mat_id)
+bool CMesh::LoadFromXMLFile(CRenderEngine *p_engine,char *filename,char *mesh_name,int mesh_mat_id)
 {
 	CTGCMeshParser loader;
 	if(!loader.LoadMesh(this,filename,mesh_name,mesh_mat_id))
 		return false;
 
-	if(!CreateMeshFromData(p_engine,(CDX11Device *)p_device))
+	if(!CreateMeshFromData(p_engine))
 		return false;
 	
 	ComputeBoundingBox();
@@ -219,191 +265,14 @@ bool CBaseMesh::LoadFromXMLFile(CRenderEngine *p_engine,CDevice *p_device,char *
 	ReleaseInternalData();
 
 	// Actualizo otros datos internos
-	device = p_device;
 	engine = p_engine;
 	strcpy(fname,filename);
-
 	return true;
 }
 
 
-// -------------------------------------------------------------------------------------------------
-CDX11Mesh::CDX11Mesh()
+bool CMesh::CreateMeshFromData(CRenderEngine *p_engine)
 {
-	cant_faces = 0;
-	start_index = 0;
-	strcpy(fname,"");
-	device = NULL;
-	m_vertexBuffer = NULL;
-	m_indexBuffer = NULL;
-}
-
-CDX11Mesh::~CDX11Mesh()
-{
-	Release();
-}
-
-void CDX11Mesh::Release()
-{
-	SAFE_RELEASE(m_vertexBuffer);
-	SAFE_RELEASE(m_indexBuffer);
-}
-
-
-
-bool CDX11Mesh::CreateMeshFromData(CRenderEngine *p_engine,CDevice *p_device)
-{
-	// Ahora con los datos del mesh cargo una mesh de directx 11
-	CDX11Device *p_d11device = (CDX11Device *)p_device;
-	// Cargo las distintas texturas en el engine, y asocio el nro de textura en el layer del mesh
-	for(int i=0;i<cant_layers;++i)
-	{
-		// Cargo la textura en el pool (o obtengo el nro de textura si es que ya estaba)
-		layers[i].nro_textura = p_engine->LoadTexture(layers[i].texture_name);
-	}
-
-	// create the vertex buffer
-	D3D11_BUFFER_DESC bd;
-	ZeroMemory(&bd, sizeof(bd));
-
-	bd.Usage = D3D11_USAGE_DYNAMIC;                // write access access by CPU and GPU
-	bd.ByteWidth = sizeof(MESH_VERTEX) * cant_vertices;             
-	bd.BindFlags = D3D11_BIND_VERTEX_BUFFER;       // use as a vertex buffer
-	bd.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;    // allow CPU to write in buffer
-	p_d11device->dev->CreateBuffer(&bd, NULL, &m_vertexBuffer);       // create the buffer
-
-	// copy the vertices into the buffer
-	D3D11_MAPPED_SUBRESOURCE ms;
-	p_d11device->devcon->Map(m_vertexBuffer, NULL, D3D11_MAP_WRITE_DISCARD, NULL, &ms);    // map the buffer
-	memcpy(ms.pData, pVertices, bd.ByteWidth);											// copy the data
-	p_d11device->devcon->Unmap(m_vertexBuffer, NULL);                                      // unmap the buffer
-
-	
-	// Index buffer
-	ZeroMemory(&bd, sizeof(bd));
-	bd.Usage = D3D11_USAGE_DYNAMIC;                // write access access by CPU and GPU
-	bd.ByteWidth = sizeof(unsigned long) * cant_indices;
-	bd.BindFlags = D3D11_BIND_INDEX_BUFFER;       // use as a index buffer
-	bd.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;    // allow CPU to write in buffer
-	p_d11device->dev->CreateBuffer(&bd, NULL, &m_indexBuffer);       // create the buffer
-
-	// El index buffer es mas complicado, porque tengo que dividir por layers. 
-	int index = 0;
-	DWORD *pIndicesAux = new DWORD[cant_indices];
-	for(int i=0;i<cant_layers;++i)
-	{
-		// Estoy trabajando con el layer i, busco en la tabla de atributos las caras que pertencen al layer i
-		layers[i].start_index = index;
-		for(int j=0;j<cant_faces;++j)
-			if(pAttributes[j]==i)
-			{
-				// Agrego esta cara al subset
-				pIndicesAux[index++] = pIndices[j*3];
-				pIndicesAux[index++] = pIndices[j*3+1];
-				pIndicesAux[index++] = pIndices[j*3+2];
-			}
-		layers[i].cant_indices = index-layers[i].start_index;
-		// Paso al siguiente layer
-	}
-	// Se supone que index==cant_indices
-	// Ahora si copio desde el indice auxiliar, que esta ordenado por subset.
-	p_d11device->devcon->Map(m_indexBuffer, NULL, D3D11_MAP_WRITE_DISCARD, NULL, &ms);   
-	memcpy(ms.pData, pIndicesAux, bd.ByteWidth);								
-	p_d11device->devcon->Unmap(m_indexBuffer, NULL);                                   
-
-	delete []pIndicesAux;
-
-	return true;
-}
-
-void CDX11Mesh::SetVertexDeclaration()
-{
-	CDX11Device *p_device = (CDX11Device *) device;
-	p_device->devcon->IASetInputLayout(p_device->pLayout);
-	bpv = sizeof(MESH_VERTEX);
-
-}
-
-
-// set the shader objects
-void CDX11Mesh::SetShaders()
-{
-	CDX11Device *p_device = (CDX11Device *) device;
-	p_device->devcon->VSSetShader(p_device->pVS, 0, 0);
-	p_device->devcon->PSSetShader(p_device->pPS, 0, 0);
-}
-
-void CDX11Mesh::Draw()
-{
-	UINT stride = bpv;
-	UINT offset = 0;
-	CDX11Device *p_device = (CDX11Device *)device;
-
-	// Seteo el index y el vertex buffer
-	p_device->devcon->IASetVertexBuffers(0, 1, &m_vertexBuffer, &stride, &offset);
-	p_device->devcon->IASetIndexBuffer(m_indexBuffer, DXGI_FORMAT_R32_UINT, 0);
-
-	// select which primtive type we are using
-	p_device->devcon->IASetPrimitiveTopology(D3D10_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-
-	// Seteo el vertex declaration
-	SetVertexDeclaration();
-	// Seteo los shaders
-	SetShaders();
-
-	// dibujo cada subset
-	for(int i=0;i<cant_layers;++i)
-		DrawSubset(i);
-}
-
-void CDX11Mesh::DrawSubset(int i)
-{
-	// Hay que setear el material 
-
-	// Set shader texture resource in the pixel shader.
-	CDX11Device *p_device = (CDX11Device *)device;
-	if(layers[i].nro_textura>=0 && layers[i].nro_textura<engine->cant_texturas)
-	{
-		CDX11Texture *p_texture = (CDX11Texture *)engine->m_texture[layers[i].nro_textura];
-		p_device->devcon->PSSetShaderResources(0, 1, &p_texture->resourceView);
-	}
-
-	// por fin dibujo el subset pp dicho
-	p_device->devcon->DrawIndexed(layers[i].cant_indices,layers[i].start_index, 0);
-
-}
-
-
-
-
-
-
-
-// -------------------------------------------------------------------------------------------------
-// soporte para DX 9
-// -------------------------------------------------------------------------------------------------
-CDX9Mesh::CDX9Mesh() : CBaseMesh()
-{
-	m_vertexBuffer = NULL;
-	m_indexBuffer = NULL;
-}
-
-CDX9Mesh::~CDX9Mesh()
-{
-	Release();
-}
-
-void CDX9Mesh::Release()
-{
-	SAFE_RELEASE(m_vertexBuffer);
-	SAFE_RELEASE(m_indexBuffer);
-}
-
-
-bool CDX9Mesh::CreateMeshFromData(CRenderEngine *p_engine,CDevice *p_device)
-{
-	CDX9Device *p_d9device =  (CDX9Device *)p_device;
-
 	// Cargo las distintas texturas en el engine, y asocio el nro de textura en el layer del mesh
 	for(int i=0;i<cant_layers;++i)
 	{
@@ -411,10 +280,10 @@ bool CDX9Mesh::CreateMeshFromData(CRenderEngine *p_engine,CDevice *p_device)
 		layers[i].nro_textura = p_engine->LoadTexture(layers[i].texture_name);
 	}
 	
+	LPDIRECT3DDEVICE9 g_pd3dDevice = p_engine->g_pd3dDevice;
 	// create the vertex buffer
 	UINT size = sizeof(MESH_VERTEX) * cant_vertices;
-	if( FAILED( p_d9device->g_pd3dDevice->CreateVertexBuffer( size, 0 , 
-		0 , D3DPOOL_DEFAULT, &m_vertexBuffer, NULL ) ) )
+	if( FAILED( g_pd3dDevice->CreateVertexBuffer( size, 0 , 0 , D3DPOOL_DEFAULT, &m_vertexBuffer, NULL ) ) )
 		return false;
 
 	MESH_VERTEX *p_gpu_vb;
@@ -426,7 +295,7 @@ bool CDX9Mesh::CreateMeshFromData(CRenderEngine *p_engine,CDevice *p_device)
 
 	// Index buffer
 	size = sizeof(unsigned long) * cant_indices;
-	if( FAILED( p_d9device->g_pd3dDevice->CreateIndexBuffer( size, 0 ,D3DFMT_INDEX32, D3DPOOL_DEFAULT, &m_indexBuffer, NULL ) ) )
+	if( FAILED( g_pd3dDevice->CreateIndexBuffer( size, 0 ,D3DFMT_INDEX32, D3DPOOL_DEFAULT, &m_indexBuffer, NULL ) ) )
 		return false;
 
 	// El index buffer es mas complicado, porque tengo que dividir por layers. 
@@ -464,28 +333,35 @@ bool CDX9Mesh::CreateMeshFromData(CRenderEngine *p_engine,CDevice *p_device)
 
 
 
+void CMesh::Render(D3DXVECTOR3 pos , D3DXVECTOR3 size , D3DXVECTOR3 rot)
+{
+	// Computo y seteo la matriz de world asociada al mesh
+	CalcularMatriz(pos,size,rot,&engine->m_World);
+	// Y actualizo los parametros del shader
+	engine->SetShaderTransform();
+	// Ahora si dibujo la malla pp dicha
+	Draw();
+}
+
 
 // Vertex declaration
-void CDX9Mesh::SetVertexDeclaration()
+void CMesh::SetVertexDeclaration()
 {
-	CDX9Device *p_device = (CDX9Device *)device;
-	LPDIRECT3DDEVICE9 g_pd3dDevice = p_device->g_pd3dDevice;
-	g_pd3dDevice->SetVertexDeclaration(p_device->m_pVertexDeclaration);
+	engine->g_pd3dDevice->SetVertexDeclaration(engine->m_pVertexDeclaration);
 	bpv = sizeof(MESH_VERTEX);
 }
 
-void CDX9Mesh::SetShaders()
+void CMesh::SetShaders()
 {
-	CDX9Device *p_device = (CDX9Device *)device;
-	LPDIRECT3DDEVICE9 g_pd3dDevice = p_device->g_pd3dDevice;
-	p_device->g_pEffect = p_device->g_pEffectStandard;
-	p_device->g_pEffect->SetTechnique("RenderScene");
+	LPDIRECT3DDEVICE9 g_pd3dDevice = engine->g_pd3dDevice;
+	engine->g_pEffect = engine->g_pEffectStandard;
+	engine->g_pEffect->SetTechnique("RenderScene");
 }
 
 
-void CDX9Mesh::Draw()
+void CMesh::Draw()
 {
-	LPDIRECT3DDEVICE9 g_pd3dDevice = ((CDX9Device *)device)->g_pd3dDevice;
+	LPDIRECT3DDEVICE9 g_pd3dDevice = engine->g_pd3dDevice;
 
 	// Seteo el index y el vertex buffer
 	g_pd3dDevice->SetStreamSource( 0, m_vertexBuffer, 0, sizeof(MESH_VERTEX));
@@ -501,17 +377,15 @@ void CDX9Mesh::Draw()
 		DrawSubset(i);
 }
 
-void CDX9Mesh::DrawSubset(int i)
+void CMesh::DrawSubset(int i)
 {
-	CDX9Device *p_device = (CDX9Device *)device;
-	LPDIRECT3DDEVICE9 g_pd3dDevice = p_device->g_pd3dDevice;
-	ID3DXEffect *g_pEffect = p_device->g_pEffect;
+	LPDIRECT3DDEVICE9 g_pd3dDevice = engine->g_pd3dDevice;
+	ID3DXEffect *g_pEffect = engine->g_pEffect;
 	// Hay que setear el material 
 	// Set shader texture resource in the pixel shader.
 	if(layers[i].nro_textura>=0 && layers[i].nro_textura<engine->cant_texturas)
 	{
-		CDX9Texture *p_texture = (CDX9Texture *)engine->m_texture[layers[i].nro_textura];
-		p_device->g_pEffect->SetTexture("g_Texture", p_texture->g_pTexture);
+		g_pEffect->SetTexture("g_Texture", engine->m_texture[layers[i].nro_textura]->g_pTexture);
 	}
 
 	// por fin dibujo el subset pp dicho
@@ -527,5 +401,103 @@ void CDX9Mesh::DrawSubset(int i)
 
 }
 
+// ---------------------------------------------
+void CMesh::CreateTri(D3DXVECTOR3 a, D3DXVECTOR3 b,D3DXVECTOR3 c)
+{
+	cant_faces = 1;
+	cant_indices = cant_vertices = 3;
+	pVertices = new MESH_VERTEX[cant_vertices];
+	pVertices[0].position = a;
+	pVertices[1].position = b;
+	pVertices[2].position = c;
+	D3DXVECTOR3 v  = b-a;
+	D3DXVECTOR3 w  = c-a;
+	D3DXVECTOR3 n;
+	D3DXVec3Cross(&n,&v,&w);
+	D3DXVec3Normalize(&n,&n);
+	pVertices[0].normal = n;
+	pVertices[1].normal = n;
+	pVertices[2].normal = n;
 
+	pIndices = new DWORD[cant_indices];
+	pIndices[0] = 0;
+	pIndices[1] = 1;
+	pIndices[2] = 2;
+
+	pAttributes = new DWORD[cant_faces];
+	memset(pAttributes,0,sizeof(DWORD)*cant_faces);
+	cant_layers = 1;
+
+	CreateMeshFromData(engine);
+
+}
+
+
+void CMesh::CreateGrid(D3DXVECTOR3 pos,float dx,float dz,int c,int f,char *texture_name,char *normal_map_name)
+{
+	cant_vertices = (c+1)*(f+1);
+	cant_faces = 2 * f * c;
+	cant_indices = 3 * cant_faces;
+	float fStepX = dx / (float)c;
+	float fStepZ = dz / (float)f;
+
+	pVertices = new MESH_VERTEX[cant_vertices];
+	MESH_VERTEX *v = &pVertices[0];
+
+	for ( int i=0; i<=f; ++i )
+	{
+		for ( int j=0; j<=c ;++j )
+		{
+			v->position.x = pos.x + -dx/2.0f + j*fStepX;
+			v->position.y = pos.y + 0.0f;
+			v->position.z = pos.z + dz/2.0f - i*fStepZ;
+			v->texcoord.x = ( (float)j / (float)c);
+			v->texcoord.y = ( (float)i / (float)f);
+			v->normal.x = 0;
+			v->normal.y = 1;
+			v->normal.z = 0;
+			v++;
+		}
+	}
+
+
+	pIndices = new DWORD [cant_indices];
+	DWORD*    pIndex = &pIndices[0];
+
+	// Fill index buffer
+	for ( int i=0; i<f; ++i )
+	{
+		for ( int j=0; j<c ;++j )
+		{
+			*pIndex++ = (DWORD)(   i     * ( c+1 ) + j );
+			*pIndex++ = (DWORD)(   i     * ( c+1 ) + j + 1 );
+			*pIndex++ = (DWORD)( ( i+1 ) * ( c+1 ) + j );
+
+			*pIndex++ = (DWORD)( ( i+1 ) * ( c+1 ) + j );
+			*pIndex++ = (DWORD)(   i     * ( c+1 ) + j + 1 );
+			*pIndex++ = (DWORD)( ( i+1 ) * ( c+1 ) + j + 1 );
+			
+		}
+	}
+
+	// armo una estructura de layer con un unico layer asociado a la textura  
+	pAttributes = new DWORD[cant_faces];
+	memset(pAttributes,0,sizeof(DWORD)*cant_faces);
+	// diffuse map
+	strcpy(layers[0].texture_name , texture_name);
+	// normal height map
+	strcpy(layers[0].normal_heightmap_name, normal_map_name);
+	// atributos del material
+	layers[0].Diffuse.a = layers[0].Ambient.a = 1;
+	layers[0].Diffuse.r = layers[0].Ambient.r = 1;
+	layers[0].Diffuse.g = layers[0].Ambient.g = 1;
+	layers[0].Diffuse.b = layers[0].Ambient.b = 1;
+	layers[0].ke = 0.4;
+	layers[0].kt = 0;
+	layers[0].kr = 0;
+	cant_layers = 1;
+
+	CreateMeshFromData(engine);
+	ComputeBoundingBox();
+}
 

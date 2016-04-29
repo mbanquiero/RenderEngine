@@ -48,10 +48,10 @@ class CTGCMeshParser : public CTGCXmlParser
 		FLOAT *texCoords;
 		char path_texturas[MAX_PATH];
 
-		CBaseMesh *M;
+		CMesh *M;
 
 		// interface
-		virtual bool LoadMesh(CBaseMesh *p_mesh,char *filename,char *mesh_name,int mesh_mat_id);
+		virtual bool LoadMesh(CMesh *p_mesh,char *filename,char *mesh_name,int mesh_mat_id);
 		virtual int LoadSceneHeader(char *filename,tgc_scene_mesh mesh_lst[]);
 
 		// Parser x linea basico
@@ -71,7 +71,7 @@ class CTGCSkeletalMeshParser : public CTGCMeshParser
 		FLOAT *tangents;
 		vertexWeight *aux_verticesWeights;
 
-		virtual bool LoadSkeletalMesh(CBaseSkeletalMesh *p_mesh,char *filename);
+		virtual bool LoadSkeletalMesh(CSkeletalMesh *p_mesh,char *filename);
 		virtual char ParseXMLLine(char *buffer);
 
 

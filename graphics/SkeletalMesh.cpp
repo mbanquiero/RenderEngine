@@ -1,9 +1,6 @@
 #include "stdafx.h"
 #include "/dev/graphics/mesh.h"
 #include "/dev/graphics/SkeletalMesh.h"
-#include "/dev/graphics/device.h"
-#include "/dev/graphics/dx11device.h"
-#include "/dev/graphics/dx9device.h"
 #include "/dev/graphics/RenderEngine.h"
 #include "/dev/graphics/xstring.h"
 #include "/dev/graphics/TGCViewer.h"
@@ -37,41 +34,53 @@ void CSkeletalBone::computeMatLocal()
 }
 
 
-CBaseSkeletalMesh::CBaseSkeletalMesh() : CBaseMesh()
+CSkeletalMesh::CSkeletalMesh() : CMesh()
 {
 	verticesWeights = NULL;
 	cant_animaciones = 0;
 
+	m_vertexBuffer = NULL;
+	m_indexBuffer = NULL;
+
+	pVertices = NULL;
+
 }
 
-CBaseSkeletalMesh::~CBaseSkeletalMesh()
+CSkeletalMesh::~CSkeletalMesh()
 {
 	SAFE_DELETE(verticesWeights);
 	for(int i=0;i<cant_animaciones;++i)
 		SAFE_DELETE(animacion[i]);
 	ReleaseInternalData();
+	Release();
 }
 
 
-void CBaseSkeletalMesh::ReleaseInternalData()
+void CSkeletalMesh::Release()
+{
+	SAFE_RELEASE(m_vertexBuffer);
+	SAFE_RELEASE(m_indexBuffer);
+}
+
+void CSkeletalMesh::ReleaseInternalData()
 {
 	if(pVertices!=NULL)
 	{
 		delete []pVertices;
 		pVertices = NULL;
 	}
-	CBaseMesh::ReleaseInternalData();
+	CMesh::ReleaseInternalData();
 }
 
 
-bool CBaseSkeletalMesh::LoadFromXMLFile(CRenderEngine *p_engine,CDevice *p_device,char *filename)
+bool CSkeletalMesh::LoadFromXMLFile(CRenderEngine *p_engine,char *filename)
 {
 
 	CTGCSkeletalMeshParser loader;
 	if(!loader.LoadSkeletalMesh(this,filename))
 		return false;
 
-	if(!CreateMeshFromData(p_engine,(CDX11Device *)p_device))
+	if(!CreateMeshFromData(p_engine))
 		return false;
 
 	ComputeBoundingBox();
@@ -82,7 +91,6 @@ bool CBaseSkeletalMesh::LoadFromXMLFile(CRenderEngine *p_engine,CDevice *p_devic
 	ReleaseInternalData();
 
 	// Actualizo otros datos internos
-	device = p_device;
 	engine = p_engine;
 	strcpy(fname,filename);
 
@@ -128,7 +136,7 @@ bool CBaseSkeletalMesh::LoadFromXMLFile(CRenderEngine *p_engine,CDevice *p_devic
 
 
 
-bool CBaseSkeletalMesh::LoadAnimation(char *fname)
+bool CSkeletalMesh::LoadAnimation(char *fname)
 {
 	bool rta = false;
 	CSkeletalAnimation *p_animacion = new CSkeletalAnimation();
@@ -229,7 +237,7 @@ bool CSkeletalAnimation::ParseXMLLine(char *buffer)
 
 
 
-void CBaseSkeletalMesh::setupSkeleton()
+void CSkeletalMesh::setupSkeleton()
 {
 	//Actualizar jerarquia
 	float det;
@@ -245,7 +253,7 @@ void CBaseSkeletalMesh::setupSkeleton()
 	}
 }
 
-void CBaseSkeletalMesh::initAnimation(int nro_animacion, bool con_loop, float userFrameRate)
+void CSkeletalMesh::initAnimation(int nro_animacion, bool con_loop, float userFrameRate)
 {
 	animating = true;
 	currentAnimation = nro_animacion;
@@ -282,7 +290,7 @@ void CBaseSkeletalMesh::initAnimation(int nro_animacion, bool con_loop, float us
 
 
 /// Actualizar los vertices de la malla segun las posiciones del los huesos del esqueleto
-void CBaseSkeletalMesh::updateMeshVertices()
+void CSkeletalMesh::updateMeshVertices()
 {
 	//Precalcular la multiplicación para llevar a un vertice a Bone-Space y luego transformarlo segun el hueso
 	//Estas matrices se envian luego al Vertex Shader para hacer skinning en GPU
@@ -293,14 +301,14 @@ void CBaseSkeletalMesh::updateMeshVertices()
 
 
 /// Actualiza el cuadro actual de la animacion.
-void CBaseSkeletalMesh::updateAnimation()
+void CSkeletalMesh::updateAnimation()
 {
 	//Ver que haya transcurrido cierta cantidad de tiempo
-	if(engine->elpased_time < 0)
+	if(engine->elapsed_time < 0)
 		return;
 
 	//Sumo el tiempo transcurrido
-	currentTime += engine->elpased_time;
+	currentTime += engine->elapsed_time;
 
 	//Se termino la animacion
 	if (currentTime > animationTimeLenght)
@@ -333,7 +341,7 @@ void CBaseSkeletalMesh::updateAnimation()
 
 
 /// Actualiza la posicion de cada hueso del esqueleto segun sus KeyFrames de la animacion
-void CBaseSkeletalMesh::updateSkeleton()
+void CSkeletalMesh::updateSkeleton()
 {
 
 	CSkeletalAnimation *p_animacion = animacion[currentAnimation];
@@ -383,7 +391,7 @@ void CBaseSkeletalMesh::updateSkeleton()
 
 
 /// Obtener el KeyFrame correspondiente a cada hueso segun el tiempo transcurrido
-int CBaseSkeletalMesh::getCurrentFrameBone(st_bone_animation *boneFrames, float currentFrame)
+int CSkeletalMesh::getCurrentFrameBone(st_bone_animation *boneFrames, float currentFrame)
 {
 	for (int i = 0; i < boneFrames->cant_frames; i++)
 	{
@@ -396,219 +404,27 @@ int CBaseSkeletalMesh::getCurrentFrameBone(st_bone_animation *boneFrames, float 
 }
 
 
-//---------------------------------------------------------------------------------
 
-CDX11SkeletalMesh::CDX11SkeletalMesh() : CBaseSkeletalMesh()
+
+void CSkeletalMesh::SetVertexDeclaration()
 {
-	m_vertexBuffer = m_indexBuffer = NULL;
-}
-
-CDX11SkeletalMesh::~CDX11SkeletalMesh()
-{
-	Release();
-}
-
-void CDX11SkeletalMesh::Release()
-{
-	SAFE_RELEASE(m_vertexBuffer);
-	SAFE_RELEASE(m_indexBuffer);
-}
-
-
-void CDX11SkeletalMesh::SetVertexDeclaration()
-{
-	CDX11Device *p_device = (CDX11Device *) device;
-	p_device->devcon->IASetInputLayout(p_device->pLayoutSkeletalMesh);
+	engine->g_pd3dDevice->SetVertexDeclaration(engine->m_pSkeletalMeshVertexDeclaration);
 	bpv = sizeof(SKELETAL_MESH_VERTEX);
 }
 
 // set the shader objects
-void CDX11SkeletalMesh::SetShaders()
+void CSkeletalMesh::SetShaders()
 {
-	CDX11Device *p_device = (CDX11Device *) device;
-	ID3D11DeviceContext *devcon = p_device->devcon;
-
-	devcon->VSSetShader(p_device->pSkeletalMeshVS, 0, 0);
-	devcon->PSSetShader(p_device->pSkeletalMeshPS, 0, 0);
-
-	// Tengo que enviar las matrices al cbuffer del shader
-	/*
-	matBoneSpace[3]._11 = 0;
-	matBoneSpace[3]._12 = 1;
-	matBoneSpace[3]._13 = 0;
-	*/
-	D3DXMATRIX bonesMatWorldArray[MAX_BONES];
-	for(int i=0;i<MAX_BONES;++i)
-	{
-		//D3DXMatrixIdentity(&bonesMatWorldArray[i]);
-		//D3DXMatrixTranspose(&bonesMatWorldArray[i],&bonesMatWorldArray[i]);
-		D3DXMatrixTranspose(&bonesMatWorldArray[i],&matBoneSpace[i]);
-	}
-
-	D3D11_MAPPED_SUBRESOURCE mappedResource;
-	boneBufferType * dataPtr;
-	devcon->Map(p_device->m_boneBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
-	dataPtr = (boneBufferType*)mappedResource.pData;
-	for(int i=0;i<MAX_BONES;++i)
-		dataPtr->bonesMatWorldArray[i] = bonesMatWorldArray[i];
-	devcon->Unmap(p_device->m_boneBuffer, 0);
-	// Finanly set the constant buffer in the vertex shader with the updated values.
-	devcon->VSSetConstantBuffers(2, 1, &p_device->m_boneBuffer);
-	devcon->PSSetConstantBuffers(2, 1, &p_device->m_boneBuffer);
-
+	LPDIRECT3DDEVICE9 g_pd3dDevice = engine->g_pd3dDevice;
+	ID3DXEffect *g_pEffect = engine->g_pEffectStandard;
+	g_pEffect->SetTechnique("SkeletalRender");
+	g_pEffect->SetMatrixArray("bonesMatWorldArray",matBoneSpace,MAX_BONES);
 }
 
 
-void CDX11SkeletalMesh::Draw()
+void CSkeletalMesh::Draw()
 {
-	UINT stride = bpv;
-	UINT offset = 0;
-	CDX11Device *p_device = (CDX11Device *)device;
-
-	// Seteo el index y el vertex buffer
-	p_device->devcon->IASetVertexBuffers(0, 1, &m_vertexBuffer, &stride, &offset);
-	p_device->devcon->IASetIndexBuffer(m_indexBuffer, DXGI_FORMAT_R32_UINT, 0);
-
-	// select which primtive type we are using
-	p_device->devcon->IASetPrimitiveTopology(D3D10_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-
-	// Seteo el vertex declaration
-	SetVertexDeclaration();
-	// Seteo los shaders
-	SetShaders();
-
-	// dibujo cada subset
-	for(int i=0;i<cant_layers;++i)
-		DrawSubset(i);
-}
-
-void CDX11SkeletalMesh::DrawSubset(int i)
-{
-	// Hay que setear el material 
-
-	// Set shader texture resource in the pixel shader.
-	CDX11Device *p_device = (CDX11Device *)device;
-	if(layers[i].nro_textura>=0 && layers[i].nro_textura<engine->cant_texturas)
-	{
-		CDX11Texture *p_texture = (CDX11Texture *)engine->m_texture[layers[i].nro_textura];
-		p_device->devcon->PSSetShaderResources(0, 1, &p_texture->resourceView);
-	}
-
-	// por fin dibujo el subset pp dicho
-	p_device->devcon->DrawIndexed(layers[i].cant_indices,layers[i].start_index, 0);
-
-}
-
-
-
-bool CDX11SkeletalMesh::CreateMeshFromData(CRenderEngine *p_engine,CDevice *p_device)
-{
-	// Ahora con los datos del mesh cargo una mesh de directx 11
-	CDX11Device *p_d11device = (CDX11Device *)p_device;
-	// Cargo las distintas texturas en el engine, y asocio el nro de textura en el layer del mesh
-	for(int i=0;i<cant_layers;++i)
-	{
-		// Cargo la textura en el pool (o obtengo el nro de textura si es que ya estaba)
-		layers[i].nro_textura = p_engine->LoadTexture(layers[i].texture_name);
-	}
-
-	// create the vertex buffer
-	D3D11_BUFFER_DESC bd;
-	ZeroMemory(&bd, sizeof(bd));
-	bd.Usage = D3D11_USAGE_DYNAMIC;                // write access access by CPU and GPU
-	bd.ByteWidth = sizeof(SKELETAL_MESH_VERTEX) * cant_vertices;             
-	bd.BindFlags = D3D11_BIND_VERTEX_BUFFER;       // use as a vertex buffer
-	bd.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;    // allow CPU to write in buffer
-	p_d11device->dev->CreateBuffer(&bd, NULL, &m_vertexBuffer);       // create the buffer
-
-	// copy the vertices into the buffer
-	D3D11_MAPPED_SUBRESOURCE ms;
-	p_d11device->devcon->Map(m_vertexBuffer, NULL, D3D11_MAP_WRITE_DISCARD, NULL, &ms);    // map the buffer
-	memcpy(ms.pData, pVertices, bd.ByteWidth);											// copy the data
-	p_d11device->devcon->Unmap(m_vertexBuffer, NULL);                                      // unmap the buffer
-
-	// Index buffer
-	ZeroMemory(&bd, sizeof(bd));
-	bd.Usage = D3D11_USAGE_DYNAMIC;                // write access access by CPU and GPU
-	bd.ByteWidth = sizeof(unsigned long) * cant_indices;
-	bd.BindFlags = D3D11_BIND_INDEX_BUFFER;       // use as a index buffer
-	bd.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;    // allow CPU to write in buffer
-	p_d11device->dev->CreateBuffer(&bd, NULL, &m_indexBuffer);       // create the buffer
-
-	// El index buffer es mas complicado, porque tengo que dividir por layers. 
-	int index = 0;
-	DWORD *pIndicesAux = new DWORD[cant_indices];
-	for(int i=0;i<cant_layers;++i)
-	{
-		// Estoy trabajando con el layer i, busco en la tabla de atributos las caras que pertencen al layer i
-		layers[i].start_index = index;
-		for(int j=0;j<cant_faces;++j)
-			if(pAttributes[j]==i)
-			{
-				// Agrego esta cara al subset
-				pIndicesAux[index++] = pIndices[j*3];
-				pIndicesAux[index++] = pIndices[j*3+1];
-				pIndicesAux[index++] = pIndices[j*3+2];
-			}
-			layers[i].cant_indices = index-layers[i].start_index;
-			// Paso al siguiente layer
-	}
-	// Se supone que index==cant_indices
-	// Ahora si copio desde el indice auxiliar, que esta ordenado por subset.
-	p_d11device->devcon->Map(m_indexBuffer, NULL, D3D11_MAP_WRITE_DISCARD, NULL, &ms);   
-	memcpy(ms.pData, pIndicesAux, bd.ByteWidth);								
-	p_d11device->devcon->Unmap(m_indexBuffer, NULL);                                   
-
-	delete []pIndicesAux;
-
-	return true;
-}
-
-
-
-
-//---------------------------------------------------------------------------------
-CDX9SkeletalMesh::CDX9SkeletalMesh() : CBaseSkeletalMesh()
-{
-	m_vertexBuffer = NULL;
-	m_indexBuffer = NULL;
-}
-
-CDX9SkeletalMesh::~CDX9SkeletalMesh()
-{
-	Release();
-}
-
-void CDX9SkeletalMesh::Release()
-{
-	SAFE_RELEASE(m_vertexBuffer);
-	SAFE_RELEASE(m_indexBuffer);
-}
-
-
-void CDX9SkeletalMesh::SetVertexDeclaration()
-{
-	CDX9Device *p_device = (CDX9Device *)device;
-	LPDIRECT3DDEVICE9 g_pd3dDevice = p_device->g_pd3dDevice;
-	g_pd3dDevice->SetVertexDeclaration(p_device->m_pSkeletalMeshVertexDeclaration);
-	bpv = sizeof(SKELETAL_MESH_VERTEX);
-}
-
-// set the shader objects
-void CDX9SkeletalMesh::SetShaders()
-{
-
-	CDX9Device *p_device = (CDX9Device *)device;
-	LPDIRECT3DDEVICE9 g_pd3dDevice = p_device->g_pd3dDevice;
-	p_device->g_pEffect = p_device->g_pEffectStandard;
-	p_device->g_pEffect->SetTechnique("SkeletalRender");
-	p_device->g_pEffect->SetMatrixArray("bonesMatWorldArray",matBoneSpace,MAX_BONES);
-}
-
-
-void CDX9SkeletalMesh::Draw()
-{
-	LPDIRECT3DDEVICE9 g_pd3dDevice = ((CDX9Device *)device)->g_pd3dDevice;
+	LPDIRECT3DDEVICE9 g_pd3dDevice = engine->g_pd3dDevice;
 	// Seteo el index y el vertex buffer
 	g_pd3dDevice->SetStreamSource( 0, m_vertexBuffer, 0, sizeof(SKELETAL_MESH_VERTEX));
 	g_pd3dDevice->SetIndices(m_indexBuffer);
@@ -623,17 +439,15 @@ void CDX9SkeletalMesh::Draw()
 		DrawSubset(i);
 }
 
-void CDX9SkeletalMesh::DrawSubset(int i)
+void CSkeletalMesh::DrawSubset(int i)
 {
-	CDX9Device *p_device = (CDX9Device *)device;
-	LPDIRECT3DDEVICE9 g_pd3dDevice = p_device->g_pd3dDevice;
-	ID3DXEffect *g_pEffect = p_device->g_pEffect;
+	LPDIRECT3DDEVICE9 g_pd3dDevice = engine->g_pd3dDevice;
+	ID3DXEffect *g_pEffect = engine->g_pEffect;
 	// Hay que setear el material 
 	// Set shader texture resource in the pixel shader.
 	if(layers[i].nro_textura>=0 && layers[i].nro_textura<engine->cant_texturas)
 	{
-		CDX9Texture *p_texture = (CDX9Texture *)engine->m_texture[layers[i].nro_textura];
-		p_device->g_pEffect->SetTexture("g_Texture", p_texture->g_pTexture);
+		g_pEffect->SetTexture("g_Texture", engine->m_texture[layers[i].nro_textura]->g_pTexture);
 	}
 
 	// por fin dibujo el subset pp dicho
@@ -650,10 +464,8 @@ void CDX9SkeletalMesh::DrawSubset(int i)
 }
 
 
-bool CDX9SkeletalMesh::CreateMeshFromData(CRenderEngine *p_engine,CDevice *p_device)
+bool CSkeletalMesh::CreateMeshFromData(CRenderEngine *p_engine)
 {
-	CDX9Device *p_d9device =  (CDX9Device *)p_device;
-
 	// Cargo las distintas texturas en el engine, y asocio el nro de textura en el layer del mesh
 	for(int i=0;i<cant_layers;++i)
 	{
@@ -663,7 +475,7 @@ bool CDX9SkeletalMesh::CreateMeshFromData(CRenderEngine *p_engine,CDevice *p_dev
 
 	// create the vertex buffer
 	UINT size = sizeof(SKELETAL_MESH_VERTEX) * cant_vertices;
-	if( FAILED( p_d9device->g_pd3dDevice->CreateVertexBuffer( size, 0 , 
+	if( FAILED( p_engine->g_pd3dDevice->CreateVertexBuffer( size, 0 , 
 		0 , D3DPOOL_DEFAULT, &m_vertexBuffer, NULL ) ) )
 		return false;
 
@@ -676,7 +488,7 @@ bool CDX9SkeletalMesh::CreateMeshFromData(CRenderEngine *p_engine,CDevice *p_dev
 
 	// Index buffer
 	size = sizeof(unsigned long) * cant_indices;
-	if( FAILED( p_d9device->g_pd3dDevice->CreateIndexBuffer( size, 0 ,D3DFMT_INDEX32, D3DPOOL_DEFAULT, &m_indexBuffer, NULL ) ) )
+	if( FAILED( p_engine->g_pd3dDevice->CreateIndexBuffer( size, 0 ,D3DFMT_INDEX32, D3DPOOL_DEFAULT, &m_indexBuffer, NULL ) ) )
 		return false;
 
 	// El index buffer es mas complicado, porque tengo que dividir por layers. 

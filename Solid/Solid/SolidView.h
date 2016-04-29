@@ -14,11 +14,6 @@ class CSolidView : public CView
 protected: // Crear sólo a partir de serialización
 	CSolidView();
 	DECLARE_DYNCREATE(CSolidView)
-
-	/*CWnd wnd_1;
-	CWnd wnd_2;
-	*/
-
 // Atributos
 public:
 	CSolidDoc* GetDocument() const;
@@ -26,7 +21,6 @@ public:
 	int x0,y0;
 	CPoint pos_cursor;
 	int eventoInterno;
-	int version_dx;
 
 // Operaciones
 public:
@@ -40,8 +34,10 @@ protected:
 	virtual void OnBeginPrinting(CDC* pDC, CPrintInfo* pInfo);
 	virtual void OnEndPrinting(CDC* pDC, CPrintInfo* pInfo);
 
-	void QueryFPS();
+	void RenderLoop();
 	void ArmarEscena();
+	void scaleToFit();
+
 
 // Implementación
 public:
@@ -66,8 +62,6 @@ public:
 	afx_msg BOOL OnMouseWheel(UINT nFlags, short zDelta, CPoint pt);
 	afx_msg void OnMButtonDown(UINT nFlags, CPoint point);
 	afx_msg void OnMButtonUp(UINT nFlags, CPoint point);
-	afx_msg void OnDeviceDirectx11();
-	afx_msg void OnDeviceDirectx9();
 	virtual void OnInitialUpdate();
 	afx_msg void OnCargarTgcmesh();
 	afx_msg void OnCargarTgcScene();

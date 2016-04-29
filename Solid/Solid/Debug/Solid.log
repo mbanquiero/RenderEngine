@@ -1,36 +1,57 @@
-﻿Compilación iniciada a las 26/07/2013 1:03:26.
+﻿Compilación iniciada a las 24/01/2016 21:10:29.
      1>Proyecto "C:\dev\Solid\Solid\Solid.vcxproj" en el nodo 2 (Build destinos).
      1>ClCompile:
-         C:\Program Files (x86)\Microsoft Visual Studio 11.0\VC\bin\CL.exe /c /ZI /nologo /W3 /WX- /Od /Oy- /D _CRT_SECURE_NO_WARNINGS /D WIN32 /D _WINDOWS /D _DEBUG /D _MBCS /Gm /EHsc /RTC1 /MTd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Yu"stdafx.h" /Fp"Debug\Solid.pch" /Fo"Debug\\" /Fd"Debug\vc110.pdb" /Gd /TP /analyze- /errorReport:prompt ..\..\graphics\dx9device.cpp
-         dx9device.cpp
-     1>c:\dev\graphics\dx9device.cpp(28): warning C4101: 'hr' : variable local sin referencia
-     1>c:\dev\graphics\dx9device.cpp(227): warning C4305: 'inicializando' : truncamiento de 'double' a 'float'
+         C:\Program Files (x86)\Microsoft Visual Studio 11.0\VC\bin\CL.exe /c /ZI /nologo /W3 /WX- /Od /Oy- /D _CRT_SECURE_NO_WARNINGS /D WIN32 /D _WINDOWS /D _DEBUG /D _MBCS /Gm /EHsc /RTC1 /MTd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Yc"stdafx.h" /Fp"Debug\Solid.pch" /Fo"Debug\\" /Fd"Debug\vc110.pdb" /Gd /TP /analyze- /errorReport:prompt stdafx.cpp
+         stdafx.cpp
+         C:\Program Files (x86)\Microsoft Visual Studio 11.0\VC\bin\CL.exe /c /ZI /nologo /W3 /WX- /Od /Oy- /D _CRT_SECURE_NO_WARNINGS /D WIN32 /D _WINDOWS /D _DEBUG /D _MBCS /Gm /EHsc /RTC1 /MTd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Yu"stdafx.h" /Fp"Debug\Solid.pch" /Fo"Debug\\" /Fd"Debug\vc110.pdb" /Gd /TP /analyze- /errorReport:prompt ..\..\graphics\RenderEngine.cpp ..\..\graphics\SkeletalMesh.cpp ..\..\graphics\TGCViewer.cpp ..\..\graphics\mesh.cpp ..\..\graphics\texture.cpp ..\..\graphics\xstring.cpp MainFrm.cpp Solid.cpp SolidDoc.cpp SolidView.cpp
+         SolidView.cpp
+     1>c:\dev\solid\solid\solidview.cpp(205): warning C4244: '+=' : conversión de 'double' a 'float'; posible pérdida de datos
+     1>c:\dev\solid\solid\solidview.cpp(206): warning C4244: 'argumento' : conversión de 'double' a 'float'; posible pérdida de datos
+     1>c:\dev\solid\solid\solidview.cpp(298): warning C4244: 'argumento' : conversión de 'double' a 'float'; posible pérdida de datos
+     1>c:\dev\solid\solid\solidview.cpp(344): warning C4244: 'argumento' : conversión de 'double' a 'FLOAT'; posible pérdida de datos
+         texture.cpp
+         TGCViewer.cpp
+     1>c:\dev\graphics\tgcviewer.cpp(155): warning C4244: '=' : conversión de 'double' a 'float'; posible pérdida de datos
+     1>c:\dev\graphics\tgcviewer.cpp(364): warning C4018: '<' : no coinciden signed/unsigned
+     1>c:\dev\graphics\tgcviewer.cpp(438): warning C4244: '=' : conversión de 'double' a 'FLOAT'; posible pérdida de datos
+     1>c:\dev\graphics\tgcviewer.cpp(474): warning C4244: '=' : conversión de 'double' a 'FLOAT'; posible pérdida de datos
+     1>c:\dev\graphics\tgcviewer.cpp(508): warning C4244: '=' : conversión de 'double' a 'FLOAT'; posible pérdida de datos
+     1>c:\dev\graphics\tgcviewer.cpp(565): warning C4244: '=' : conversión de 'double' a 'float'; posible pérdida de datos
+     1>c:\dev\graphics\tgcviewer.cpp(792): warning C4244: 'inicializando' : conversión de 'float' a 'int'; posible pérdida de datos
+     1>c:\dev\graphics\tgcviewer.cpp(796): warning C4244: '=' : conversión de 'float' a 'int'; posible pérdida de datos
+     1>c:\dev\graphics\tgcviewer.cpp(818): warning C4018: '<' : no coinciden signed/unsigned
+     1>c:\dev\graphics\tgcviewer.cpp(839): warning C4244: '=' : conversión de 'int' a 'FLOAT'; posible pérdida de datos
+     1>c:\dev\graphics\tgcviewer.cpp(840): warning C4244: '=' : conversión de 'int' a 'FLOAT'; posible pérdida de datos
+     1>c:\dev\graphics\tgcviewer.cpp(841): warning C4244: '=' : conversión de 'int' a 'FLOAT'; posible pérdida de datos
+     1>c:\dev\graphics\tgcviewer.cpp(842): warning C4244: '=' : conversión de 'int' a 'FLOAT'; posible pérdida de datos
+     1>c:\dev\graphics\tgcviewer.cpp(874): warning C4018: '<' : no coinciden signed/unsigned
+         Generando código...
+         Omitiendo... (no se detectaron cambios relevantes)
+         SolidDoc.cpp
+         Solid.cpp
+         MainFrm.cpp
+         xstring.cpp
+         mesh.cpp
+         SkeletalMesh.cpp
+         RenderEngine.cpp
        Link:
          C:\Program Files (x86)\Microsoft Visual Studio 11.0\VC\bin\link.exe /ERRORREPORT:PROMPT /OUT:"C:\dev\Solid\Debug\Solid.exe" /INCREMENTAL /NOLOGO /LIBPATH:"C:\Program Files (x86)\Microsoft DirectX SDK (June 2010)\Lib\x86" d3dcompiler.lib d3dx11d.lib d3dx9d.lib dxerr.lib dxguid.lib winmm.lib comctl32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /manifestinput:"C:\Program Files (x86)\Microsoft Visual Studio 11.0\VC\Include\Manifest\dpiaware.manifest" /DEBUG /PDB:"C:\dev\Solid\Debug\Solid.pdb" /SUBSYSTEM:WINDOWS /HEAP:"0xb00000" /STACK:"0xb00000" /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"C:\dev\Solid\Debug\Solid.lib" /MACHINE:X86 Debug\Solid.res
-         Debug\Camera.obj
-         Debug\dx11device.obj
-         Debug\dx9device.obj
          Debug\mesh.obj
-         Debug\object.obj
          Debug\RenderEngine.obj
          Debug\SkeletalMesh.obj
          Debug\texture.obj
          Debug\TGCViewer.obj
-         Debug\Vectores.obj
          Debug\xstring.obj
          Debug\MainFrm.obj
          Debug\Solid.obj
          Debug\SolidDoc.obj
          Debug\SolidView.obj
          Debug\stdafx.obj
-         "..\..\..\Program Files (x86)\Microsoft DirectX SDK (June 2010)\Lib\x86\d3d11.lib"
          "..\..\..\Program Files (x86)\Microsoft DirectX SDK (June 2010)\Lib\x86\d3d9.lib"
-         "..\..\..\Program Files (x86)\Microsoft DirectX SDK (June 2010)\Lib\x86\d3dx10.lib"
-         "..\..\..\Program Files (x86)\Microsoft DirectX SDK (June 2010)\Lib\x86\d3dx11.lib"
          "..\..\..\Program Files (x86)\Microsoft DirectX SDK (June 2010)\Lib\x86\d3dx9.lib"
          Solid.vcxproj -> C:\dev\Solid\Debug\Solid.exe
      1>Compilación del proyecto terminada "C:\dev\Solid\Solid\Solid.vcxproj" (Build destinos).
 
-Build succeeded.
+Compilación correcta.
 
-Tiempo transcurrido 00:00:00.91
+Tiempo transcurrido 00:00:11.81

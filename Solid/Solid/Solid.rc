@@ -82,29 +82,6 @@ END
 
 IDR_MAINFRAME MENU
 BEGIN
-    POPUP "&Archivo"
-    BEGIN
-        MENUITEM "&Nuevo\tCtrl+N",              ID_FILE_NEW
-        MENUITEM "&Abrir...\tCtrl+O",           ID_FILE_OPEN
-        MENUITEM "&Guardar\tCtrl+S",            ID_FILE_SAVE
-        MENUITEM "Guardar &como...",            ID_FILE_SAVE_AS
-        MENUITEM SEPARATOR
-        MENUITEM "&Imprimir...\tCtrl+P",        ID_FILE_PRINT
-        MENUITEM "&Vista previa de impresión",  ID_FILE_PRINT_PREVIEW
-        MENUITEM "&Configurar impresión...",    ID_FILE_PRINT_SETUP
-        MENUITEM SEPARATOR
-        MENUITEM "Archivo reciente",            ID_FILE_MRU_FILE1, GRAYED
-        MENUITEM SEPARATOR
-        MENUITEM "&Salir",                      ID_APP_EXIT
-    END
-    POPUP "&Edición"
-    BEGIN
-        MENUITEM "&Deshacer\tCtrl+Z",           ID_EDIT_UNDO
-        MENUITEM SEPARATOR
-        MENUITEM "Cor&tar\tCtrl+X",             ID_EDIT_CUT
-        MENUITEM "&Copiar\tCtrl+C",             ID_EDIT_COPY
-        MENUITEM "&Pegar\tCtrl+V",              ID_EDIT_PASTE
-    END
     POPUP "&Ver"
     BEGIN
         POPUP "&Barras de herramientas y ventanas de acoplamiento"
@@ -129,11 +106,6 @@ BEGIN
             END
         END
     END
-    POPUP "Device"
-    BEGIN
-        MENUITEM "DirectX 11",                  ID_DEVICE_DIRECTX11
-        MENUITEM "DirectX 9",                   ID_DEVICE_DIRECTX9
-    END
     POPUP "Mesh"
     BEGIN
         MENUITEM "Cargar TGC Mesh",             ID_CARGAR_TGCMESH
@@ -143,10 +115,6 @@ BEGIN
     BEGIN
         MENUITEM "Siguiente",                   ID_PGDN
         MENUITEM "Anterior",                    ID_PGUP
-    END
-    POPUP "Ay&uda"
-    BEGIN
-        MENUITEM "&Acerca de Solid...",         ID_APP_ABOUT
     END
 END
 

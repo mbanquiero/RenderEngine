@@ -1,2 +1,0 @@
-<?xml version='1.0' encoding='UTF-8'?>
-<DEFECTS><DEFECT><SFA><FILEPATH>c:\dev\graphics\</FILEPATH><FILENAME>renderengine.cpp</FILENAME><LINE>425</LINE><COLUMN>36</COLUMN></SFA><DEFECTCODE>6262</DEFECTCODE><DESCRIPTION>La función usa '69428' bytes de la pila: supera /analyze:stacksize '16384'. Considere mover algunos datos al montón.</DESCRIPTION><FUNCTION>CRenderEngine::LoadSceneFromXml</FUNCTION><DECORATED>?LoadSceneFromXml@CRenderEngine@@QAE_NPAD@Z</DECORATED><FUNCLINE>425</FUNCLINE><PATH/></DEFECT></DEFECTS>

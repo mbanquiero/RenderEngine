@@ -14,6 +14,7 @@ float3 g_LightColor;			// Color de la luz
 
 float g_LightPhi;				// Spotlight: cos (Phi angle/2) (cono exterior)	cos(light[l].Phi/2.0f);
 float g_LightTheta;				// Spotlight: cos(Theta angle/2) (cono interior)
+float4 m_FontColor;
 
 float screen_dx;
 float screen_dy;
@@ -217,5 +218,69 @@ technique SkeletalRender
     {          
         VertexShader = compile vs_3_0 SkeletalVShader();
         PixelShader  = compile ps_3_0 SkeletalPShader(); 
+    }
+}
+
+
+
+// -----------------------------------------------
+// Vertex Shader para Quad 2d
+struct VS_QUAD_OUTPUT
+{
+    float4 position : POSITION;
+	float2 texCoords : TEXCOORD0;
+};
+
+VS_QUAD_OUTPUT SpriteVS(float4 position : POSITION, float2 texCoords: TEXCOORD0)
+{
+    VS_QUAD_OUTPUT output;
+	output.position.zw = 1;
+	output.position.xy = position.xy;
+	output.texCoords.xy = texCoords;
+    return output;
+}
+
+
+float4 SpritePS(VS_QUAD_OUTPUT Input) : COLOR0
+{
+    float4 base_color = tex2D(TextureSampler,Input.texCoords);
+	base_color.a *= 0.5;
+	return base_color;
+}
+
+
+float4 FontPS(VS_QUAD_OUTPUT Input) : COLOR0
+{
+    float4 base_color = tex2D(TextureSampler,Input.texCoords);
+	if(base_color.r==0 || base_color.a<0.5)
+		base_color.a = 0;			// Transparente
+	else
+	{
+		base_color.a = 1;			// font color
+		base_color.rgb = m_FontColor;
+	}
+	return base_color;
+}
+
+
+
+
+technique RenderSprite
+{
+    pass P0
+    {          
+        VertexShader = compile vs_3_0 SpriteVS();
+        PixelShader  = compile ps_3_0 SpritePS(); 
+    }
+}
+
+
+
+technique RenderText
+{
+    pass P0
+    {          
+        VertexShader = compile vs_3_0 SpriteVS();
+        PixelShader  = compile ps_3_0 FontPS(); 
     }
 }
