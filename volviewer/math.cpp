@@ -2,6 +2,76 @@
 #include <math.h>
 #include "math.h"
 
+vec3::vec3(double a,double b, double c)
+{
+	x = a;
+	y = b;
+	z = c;
+}
+
+vec3 vec3::operator+(vec3 &q)
+{
+	return(vec3(x+q.x,y+q.y,z+q.z));
+}
+
+// diferencia de vectores
+vec3 vec3::operator-(vec3 &q)
+{
+	return(vec3(x-q.x,y-q.y,z-q.z));
+}
+
+// escalar x vector
+vec3 vec3::operator*(float k)
+{
+	return(vec3(k*x,k*y,k*z));
+}
+
+
+float vec3::length()
+{
+	return(sqrt(fabs(x*x+y*y+z*z)));
+}
+
+void vec3::normalize()
+{
+	float m = length();
+	if(fabs(m)>0.001)
+	{
+		x/=m;
+		y/=m;
+		z/=m;
+	}
+}
+
+void vec3::rotar_xz(float an)
+{
+	float xt=x*cos(an)-z*sin(an); 
+	float zt=x*sin(an)+z*cos(an);
+	x = xt;
+	z = zt;
+}
+
+void vec3::rotar_xz(vec3 O, float an)
+{
+	*this = *this - O;
+	float xt=x*cos(an)-z*sin(an); 
+	float zt=x*sin(an)+z*cos(an);
+	x = xt;
+	z = zt;
+	*this = *this + O;
+
+}
+
+vec3 cross( vec3 u , vec3 v)
+{
+	return vec3(u.y*v.z-u.z*v.y , u.z*v.x-u.x*v.z , u.x*v.y-u.y*v.x);
+}
+
+float dot( vec3 u , vec3 v)
+{
+	return u.x*v.x+u.y*v.y+u.z*v.z;	
+}
+
 
 vec4::vec4(double a,double b, double c,double d)
 {

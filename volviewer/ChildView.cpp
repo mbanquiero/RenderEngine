@@ -97,13 +97,22 @@ void CChildView::RenderLoop()
 		}
 		
 
-		if(GetAsyncKeyState(VK_UP))
-			escena.dist -= elapsed_time;
-		if(GetAsyncKeyState(VK_DOWN))
-			escena.dist += elapsed_time;
+		if(escena.ray_casting)
+		{
+			if(GetAsyncKeyState(VK_UP))
+				escena.lookFrom = escena.lookFrom + escena.viewDir*(elapsed_time*20);
+			if(GetAsyncKeyState(VK_DOWN))
+				escena.lookFrom = escena.lookFrom - escena.viewDir*(elapsed_time*20);
+		}
+		else
+		{
+			if(GetAsyncKeyState(VK_UP))
+				escena.dist -= elapsed_time;
+			if(GetAsyncKeyState(VK_DOWN))
+				escena.dist += elapsed_time;
+		}
 
-		//escena.Update(elapsed_time);
-		//escena.an_x += elapsed_time;
+
 		escena.Render();
 		++cant_frames;
 
@@ -153,7 +162,7 @@ void CChildView::OnFileOpen()
 		exit(0);
 	}
 
-	if( !escena.tex.CreateFromFile( objOpenFile.GetPathName(), 256, 256,256))
+	if( !escena.tex[0].CreateFromFile( objOpenFile.GetPathName(), 256, 256,256))
 	{
 		AfxMessageBox( _T( "Failed to read the data" ));
 	}
@@ -178,8 +187,8 @@ void CChildView::OnMouseMove(UINT nFlags, CPoint point)
 {
 	if( ev_rotar )
 	{
-		escena.an_x += (y0-point.y)*0.05;
-		escena.an_y += (x0-point.x)*0.05;
+		escena.an_x += (y0-point.y)*0.01;
+		escena.an_y += (x0-point.x)*0.01;
 		x0 = point.x;
 		y0 = point.y;
 	}
@@ -188,9 +197,32 @@ void CChildView::OnMouseMove(UINT nFlags, CPoint point)
 
 BOOL CChildView::OnMouseWheel(UINT nFlags, short zDelta, CPoint pt)
 {
-	if(zDelta<0)
-		escena.escale *= 1.1;
+	if(escena.ray_casting)
+	{
+		if(GetAsyncKeyState(VK_SHIFT))
+		{
+			if(zDelta<0)
+				escena.voxel_opacity*= 1.1;
+			else
+				escena.voxel_opacity/= 1.1;
+		}
+		else
+		{
+			if(zDelta<0)
+				escena.escale *= 1.1;
+			else
+				escena.escale /= 1.1;
+		}
+	}
 	else
-		escena.escale /= 1.1;
+	{
+		if(zDelta<0)
+			escena.escale *= 1.1;
+		else
+			escena.escale /= 1.1;
+	}
+
+
+
 	return TRUE;
 }
