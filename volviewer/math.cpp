@@ -62,6 +62,48 @@ void vec3::rotar_xz(vec3 O, float an)
 
 }
 
+
+void vec3::rotar(vec3 o,vec3 eje,float theta)
+{
+	float a = o.x;
+	float b = o.y;
+	float c = o.z;
+	float u = eje.x;
+	float v = eje.y;
+	float w = eje.z;
+
+	float u2 = u*u;
+	float v2 = v*v;
+	float w2 = w*w;
+	float cosT = cos(theta);
+	float sinT = sin(theta);
+	float l2 = u2 + v2 + w2;
+	float l =  sqrt(l2);
+
+	if(l2 < 0.000000001)		// el vector de rotacion es casi nulo
+		return;
+
+	float xr = a*(v2 + w2) + u*(-b*v - c*w + u*x + v*y + w*z) 
+		+ (-a*(v2 + w2) + u*(b*v + c*w - v*y - w*z) + (v2 + w2)*x)*cosT
+		+ l*(-c*v + b*w - w*y + v*z)*sinT;
+	xr/=l2;
+
+	float yr = b*(u2 + w2) + v*(-a*u - c*w + u*x + v*y + w*z) 
+		+ (-b*(u2 + w2) + v*(a*u + c*w - u*x - w*z) + (u2 + w2)*y)*cosT
+		+ l*(c*u - a*w + w*x - u*z)*sinT;
+	yr/=l2;
+
+	float zr = c*(u2 + v2) + w*(-a*u - b*v + u*x + v*y + w*z) 
+		+ (-c*(u2 + v2) + w*(a*u + b*v - u*x - v*y) + (u2 + v2)*z)*cosT
+		+ l*(-b*u + a*v - v*x + u*y)*sinT;
+	zr/=l2;
+
+	x = xr;
+	y = yr;
+	z = zr;
+}
+
+
 vec3 cross( vec3 u , vec3 v)
 {
 	return vec3(u.y*v.z-u.z*v.y , u.z*v.x-u.x*v.z , u.x*v.y-u.y*v.x);
@@ -92,6 +134,17 @@ mat4::mat4(	double a11,double a12, double a13,double a14,
 	m[4] = a12;		m[5] = a22;		m[6] = a32;		m[7] = a42;
 	m[8] = a13;		m[9] = a23;		m[10] = a33;	m[11] = a43;
 	m[12] = a14;	m[13] = a24;	m[14] = a34;	m[15] = a44;
+}
+
+
+mat4 mat4::fromBase(vec3 N, vec3 U,vec3 V)
+{
+	return mat4(		
+		N.x,	U.x,	V.x,	0,
+		N.y,	U.y,	V.y,	0,
+		N.z,	U.z,	V.z,	0,
+		0,	0,	0,	1);
+
 }
 
 
@@ -159,3 +212,45 @@ mat4 mat4::operator*(mat4 B)
 	return C;
 }
 
+
+void swap(float *a,float *b)
+{
+	float c = *a;
+	*a = *b;
+	*b = c;
+}
+
+
+
+// helper interseccion rayo - esfera
+bool intersect(vec3 orig , vec3 dir, vec3 center,float radio) 
+{ 
+	vec3 L = orig-center;
+	float B = 2*dot(dir, L);
+	float C = dot(L,L)-radio*radio;
+	float disc = B*B - 4*C;
+	if(disc>=0)
+	{
+		float t0 = (-B-sqrt(disc))/2;
+		float t1 = (-B+sqrt(disc))/2;
+		if(t0>t1)
+			swap(&t0,&t1);
+		// t0 < t1 
+		if(fabs(t0-15)<1 || fabs(t1-15)<1)
+			return true;
+	}
+	return false;
+
+} 
+
+
+int clamp(int x , int a, int b)
+{
+	if(x<a)
+		return a;
+	else
+	if(x>b)
+		return b;
+	else
+		return x;
+}

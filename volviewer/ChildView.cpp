@@ -6,6 +6,7 @@
 #include "volviewer.h"
 #include "ChildView.h"
 #include "RenderEngine.h"
+#include <math.h>
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -56,6 +57,7 @@ BOOL CChildView::PreCreateWindow(CREATESTRUCT& cs)
 void CChildView::OnPaint() 
 {
 	CPaintDC dc(this); // Contexto de dispositivo para dibujo
+
 	if(primera_vez )
 	{
 		primera_vez = false;
@@ -65,6 +67,18 @@ void CChildView::OnPaint()
 			RenderLoop();
 	}
 
+}
+
+
+// helper clamp pos
+float clamp256(float x)
+{
+	if(x<-128)
+		x+=256;
+	else
+	if(x>128)
+		x-=256;
+	return x;
 }
 
 
@@ -97,21 +111,62 @@ void CChildView::RenderLoop()
 		}
 		
 
-		if(escena.ray_casting)
+		float vel_rot = elapsed_time*1.5;
+		vec3 cero = vec3(0,0,0);
+
+		if(GetAsyncKeyState(VK_RIGHT))
 		{
-			if(GetAsyncKeyState(VK_UP))
-				escena.lookFrom = escena.lookFrom + escena.viewDir*(elapsed_time*20);
-			if(GetAsyncKeyState(VK_DOWN))
-				escena.lookFrom = escena.lookFrom - escena.viewDir*(elapsed_time*20);
+			escena.viewDir.rotar(cero,escena.U,-vel_rot);
+			escena.V.rotar(cero,escena.U,-vel_rot);
 		}
-		else
+		if(GetAsyncKeyState(VK_LEFT))
 		{
-			if(GetAsyncKeyState(VK_UP))
-				escena.dist -= elapsed_time;
-			if(GetAsyncKeyState(VK_DOWN))
-				escena.dist += elapsed_time;
+			escena.viewDir.rotar(cero,escena.U,vel_rot);
+			escena.V.rotar(cero,escena.U,vel_rot);
 		}
 
+		if(GetAsyncKeyState(VK_UP))
+		{
+			escena.viewDir.rotar(cero,escena.V,vel_rot);
+			escena.U.rotar(cero,escena.V,vel_rot);
+		}
+			
+		if(GetAsyncKeyState(VK_DOWN))
+		{
+			escena.viewDir.rotar(cero,escena.V,-vel_rot);
+			escena.U.rotar(cero,escena.V,-vel_rot);
+		}
+
+
+		if(GetAsyncKeyState(VK_ADD))
+			escena.filtro = 1;
+		if(GetAsyncKeyState(VK_SUBTRACT))
+			escena.filtro = 0;
+
+
+		/*
+
+		if(GetAsyncKeyState(VK_ADD))
+			if(GetAsyncKeyState(VK_SHIFT))
+				escena.voxel_step0*=1.01f;
+			else
+				escena.voxel_step*=1.01f;
+
+		if(GetAsyncKeyState(VK_SUBTRACT))
+			if(GetAsyncKeyState(VK_SHIFT))
+				escena.voxel_step0/=1.01f;
+			else
+				escena.voxel_step/=1.01f;
+		*/
+
+		if(GetAsyncKeyState('W'))
+			escena.lookFrom = escena.lookFrom + escena.viewDir*(elapsed_time*escena.vel_tras);
+		if(GetAsyncKeyState('Z'))
+			escena.lookFrom = escena.lookFrom - escena.viewDir*(elapsed_time*escena.vel_tras);
+
+		escena.lookFrom.x = clamp256(escena.lookFrom.x);
+		escena.lookFrom.y = clamp256(escena.lookFrom.y);
+		escena.lookFrom.z = clamp256(escena.lookFrom.z);
 
 		escena.Render();
 		++cant_frames;
@@ -143,6 +198,7 @@ void CChildView::RenderLoop()
 				case VK_ESCAPE:
 					seguir = FALSE;
 					break;
+				
 				}
 				break;
 			}
@@ -162,10 +218,11 @@ void CChildView::OnFileOpen()
 		exit(0);
 	}
 
-	if( !escena.tex[0].CreateFromFile( objOpenFile.GetPathName(), 256, 256,256))
+	if( !escena.tex.CreateFromFile( objOpenFile.GetPathName(), 256, 256,256))
 	{
 		AfxMessageBox( _T( "Failed to read the data" ));
 	}
+
 
 }
 
@@ -187,8 +244,6 @@ void CChildView::OnMouseMove(UINT nFlags, CPoint point)
 {
 	if( ev_rotar )
 	{
-		escena.an_x += (y0-point.y)*0.01;
-		escena.an_y += (x0-point.x)*0.01;
 		x0 = point.x;
 		y0 = point.y;
 	}
@@ -197,32 +252,5 @@ void CChildView::OnMouseMove(UINT nFlags, CPoint point)
 
 BOOL CChildView::OnMouseWheel(UINT nFlags, short zDelta, CPoint pt)
 {
-	if(escena.ray_casting)
-	{
-		if(GetAsyncKeyState(VK_SHIFT))
-		{
-			if(zDelta<0)
-				escena.voxel_opacity*= 1.1;
-			else
-				escena.voxel_opacity/= 1.1;
-		}
-		else
-		{
-			if(zDelta<0)
-				escena.escale *= 1.1;
-			else
-				escena.escale /= 1.1;
-		}
-	}
-	else
-	{
-		if(zDelta<0)
-			escena.escale *= 1.1;
-		else
-			escena.escale /= 1.1;
-	}
-
-
-
 	return TRUE;
 }

@@ -18,6 +18,7 @@ public:
 	void normalize();
 	void rotar_xz(float an);
 	void rotar_xz(vec3 O, float an);
+	void rotar(vec3 o,vec3 eje,float theta);
 
 
 };
@@ -25,6 +26,8 @@ public:
 
 vec3 cross( vec3 u , vec3 v);
 float dot( vec3 u , vec3 v);
+void swap(float *a,float *b);
+int clamp(int x , int a, int b);
 
 class vec4
 {
@@ -48,8 +51,11 @@ class mat4
 		static mat4 RotateX(double an);
 		static mat4 RotateY(double an);
 		static mat4 RotateZ(double an);
+		static mat4 fromBase(vec3 N, vec3 U,vec3 V);
 
 		mat4 operator*(mat4 B);
 
 };
+
+bool intersect(vec3 orig , vec3 dir, vec3 center,float radio) ;
 

@@ -7,8 +7,6 @@
 
 #pragma once
 
-extern bool distance_map;
-
 
 class CTexture
 {
@@ -17,7 +15,12 @@ public:
 	virtual ~CTexture();
 	bool CreateFromFile(LPCTSTR lpDataFile_i, int nWidth_i, int nHeight_i, int nSlices_i );
 	bool CreateFromTest(int n,int nWidth_i, int nHeight_i, int nSlices_i );
+	// -------------- sobre el RAW
 	void Box(BYTE *buff, int x0,int y0,int z0,int x1,int y1,int z1);
+	
+	// -------------- sobre el RGBA
+	void Box2(char *buff, int x0,int y0,int z0,int x1,int y1,int z1);
+	void Ellipsoid(char *buff, int x0,int y0,int z0,int x1,int y1,int z1);
 
 	int dx , dy, dz , id;
 };
@@ -44,28 +47,42 @@ public:
 	void TextureVR();
 	void Release();
 	void setShaders();
+	void loadShaders(char *vs,char *fs,GLhandleARB *vs_main,GLhandleARB *fs_main,GLhandleARB *shader_prog);
+
 	void initFonts();
 	void renderText(int px, int py,char *text);
+	void renderText(float k,int px, int py,char *text);
+	void renderCircle(int px, int py,int r);
+	void renderRect(int px0, int py0,int dx,int d1);
+	void renderHUD();
 
-	bool ray_casting;
 	HDC m_hDC;
 	HGLRC m_hglContext;
-	float dist;
-	float escale;
-	float an_x,an_y,an_z;			// rotacion = angulos de euler
-	CTexture tex[4];
+	CTexture tex;
 	float fps;
 	float time;
 	float elapsed_time;
 
 	vec3 lookFrom;
-	vec3 lookAt;
 	vec3 viewDir;
-	float voxel_opacity;
+	vec3 U,V;
 	float voxel_step0;
 	float voxel_step;
+	int filtro;
+	float mr , mg , mb;
+	bool target_hit;
+
+	float vel_tras;
+	int game_status;
+	float timer_catch;
+	int cant_capturados;
+
+	GLint fbWidth;
+	GLint fbHeight;
+
 
 	GLhandleARB vs_main,fs_main,shader_prog;
+	GLhandleARB vs2_main,fs2_main,shader_prog2;
 
 	// fonts
 	st_glyph glyphs[255];
