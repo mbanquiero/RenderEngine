@@ -27,7 +27,6 @@ public:
 vec3 cross( vec3 u , vec3 v);
 float dot( vec3 u , vec3 v);
 void swap(float *a,float *b);
-int clamp(int x , int a, int b);
 
 class vec4
 {

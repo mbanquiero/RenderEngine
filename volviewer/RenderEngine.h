@@ -15,12 +15,7 @@ public:
 	virtual ~CTexture();
 	bool CreateFromFile(LPCTSTR lpDataFile_i, int nWidth_i, int nHeight_i, int nSlices_i );
 	bool CreateFromTest(int n,int nWidth_i, int nHeight_i, int nSlices_i );
-	// -------------- sobre el RAW
 	void Box(BYTE *buff, int x0,int y0,int z0,int x1,int y1,int z1);
-	
-	// -------------- sobre el RGBA
-	void Box2(char *buff, int x0,int y0,int z0,int x1,int y1,int z1);
-	void Ellipsoid(char *buff, int x0,int y0,int z0,int x1,int y1,int z1);
 
 	int dx , dy, dz , id;
 };
@@ -51,10 +46,6 @@ public:
 
 	void initFonts();
 	void renderText(int px, int py,char *text);
-	void renderText(float k,int px, int py,char *text);
-	void renderCircle(int px, int py,int r);
-	void renderRect(int px0, int py0,int dx,int d1);
-	void renderHUD();
 
 	HDC m_hDC;
 	HGLRC m_hglContext;
@@ -68,9 +59,6 @@ public:
 	vec3 U,V;
 	float voxel_step0;
 	float voxel_step;
-	int filtro;
-	float mr , mg , mb;
-	bool target_hit;
 
 	float vel_tras;
 	int game_status;

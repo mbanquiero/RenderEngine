@@ -1,8 +1,0 @@
-C:\dev\WindowsFormsApplication1\bin\Debug\WindowsFormsApplication1.exe.config
-C:\dev\WindowsFormsApplication1\bin\Debug\WindowsFormsApplication1.exe
-C:\dev\WindowsFormsApplication1\bin\Debug\WindowsFormsApplication1.pdb
-C:\dev\WindowsFormsApplication1\obj\Debug\WindowsFormsApplication1.csprojResolveAssemblyReference.cache
-C:\dev\WindowsFormsApplication1\obj\Debug\WindowsFormsApplication1.Properties.Resources.resources
-C:\dev\WindowsFormsApplication1\obj\Debug\WindowsFormsApplication1.csproj.GenerateResource.Cache
-C:\dev\WindowsFormsApplication1\obj\Debug\WindowsFormsApplication1.exe
-C:\dev\WindowsFormsApplication1\obj\Debug\WindowsFormsApplication1.pdb

@@ -116,6 +116,33 @@ void CChildView::RenderLoop()
 
 		if(GetAsyncKeyState(VK_RIGHT))
 		{
+			escena.lookFrom.rotar(cero,escena.U,-vel_rot);
+			escena.V.rotar(cero,escena.U,-vel_rot);
+		}
+		if(GetAsyncKeyState(VK_LEFT))
+		{
+			escena.lookFrom.rotar(cero,escena.U,vel_rot);
+			escena.V.rotar(cero,escena.U,vel_rot);
+		}
+
+
+		if(GetAsyncKeyState(VK_UP))
+		{
+			escena.lookFrom.rotar(cero,escena.V,vel_rot);
+			escena.U.rotar(cero,escena.V,vel_rot);
+		}
+
+		if(GetAsyncKeyState(VK_DOWN))
+		{
+			escena.lookFrom.rotar(cero,escena.V,-vel_rot);
+			escena.U.rotar(cero,escena.V,-vel_rot);
+		}
+
+
+
+		/*
+		if(GetAsyncKeyState(VK_RIGHT))
+		{
 			escena.viewDir.rotar(cero,escena.U,-vel_rot);
 			escena.V.rotar(cero,escena.U,-vel_rot);
 		}
@@ -135,16 +162,58 @@ void CChildView::RenderLoop()
 		{
 			escena.viewDir.rotar(cero,escena.V,-vel_rot);
 			escena.U.rotar(cero,escena.V,-vel_rot);
-		}
-
-
-		if(GetAsyncKeyState(VK_ADD))
-			escena.filtro = 1;
-		if(GetAsyncKeyState(VK_SUBTRACT))
-			escena.filtro = 0;
+		}*/
 
 
 		/*
+		vec3 Up = vec3(0,1,0);
+		vec3 N = vec3(0,0,1);
+		vec3 BN = vec3(1,0,0);
+		if(GetAsyncKeyState(VK_RIGHT))
+		{
+			escena.viewDir.rotar(cero,Up,-vel_rot);
+			escena.V.rotar(cero,Up,-vel_rot);
+			escena.U.rotar(cero,Up,-vel_rot);
+		}
+		if(GetAsyncKeyState(VK_LEFT))
+		{
+			escena.viewDir.rotar(cero,Up,vel_rot);
+			escena.V.rotar(cero,Up,vel_rot);
+			escena.U.rotar(cero,Up,vel_rot);
+		}
+
+
+		if(GetAsyncKeyState(VK_SHIFT))
+		{
+			if(GetAsyncKeyState(VK_UP))
+			{
+				escena.viewDir.rotar(cero,N,-vel_rot);
+				escena.V.rotar(cero,N,-vel_rot);
+				escena.U.rotar(cero,N,-vel_rot);
+			}
+
+			if(GetAsyncKeyState(VK_DOWN))
+			{
+				escena.viewDir.rotar(cero,N,vel_rot);
+				escena.V.rotar(cero,N,vel_rot);
+				escena.U.rotar(cero,N,vel_rot);
+			}
+		}
+		else
+		{
+			if(GetAsyncKeyState(VK_UP))
+			{
+				escena.viewDir.rotar(cero,BN,-vel_rot);
+				escena.V.rotar(cero,BN,-vel_rot);
+				escena.U.rotar(cero,BN,-vel_rot);
+			}
+			if(GetAsyncKeyState(VK_DOWN))
+			{
+				escena.viewDir.rotar(cero,BN,vel_rot);
+				escena.V.rotar(cero,BN,vel_rot);
+				escena.U.rotar(cero,BN,vel_rot);
+			}
+		}
 
 		if(GetAsyncKeyState(VK_ADD))
 			if(GetAsyncKeyState(VK_SHIFT))
@@ -157,7 +226,6 @@ void CChildView::RenderLoop()
 				escena.voxel_step0/=1.01f;
 			else
 				escena.voxel_step/=1.01f;
-		*/
 
 		if(GetAsyncKeyState('W'))
 			escena.lookFrom = escena.lookFrom + escena.viewDir*(elapsed_time*escena.vel_tras);
@@ -167,6 +235,7 @@ void CChildView::RenderLoop()
 		escena.lookFrom.x = clamp256(escena.lookFrom.x);
 		escena.lookFrom.y = clamp256(escena.lookFrom.y);
 		escena.lookFrom.z = clamp256(escena.lookFrom.z);
+		*/
 
 		escena.Render();
 		++cant_frames;
@@ -198,7 +267,6 @@ void CChildView::RenderLoop()
 				case VK_ESCAPE:
 					seguir = FALSE;
 					break;
-				
 				}
 				break;
 			}
