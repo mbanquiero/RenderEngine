@@ -102,9 +102,8 @@ void CraytDlg::OnBnClickedOk()
 	LARGE_INTEGER F,T0,T1;   // address of current frequency
 	QueryPerformanceFrequency(&F);
 	QueryPerformanceCounter(&T0);
-	//motor.render(pDC);
-	motor.renderKDTree(pDC);
-
+	motor.render(pDC);
+	
 	QueryPerformanceCounter(&T1);
 	float elapsed_time = (float)(T1.QuadPart - T0.QuadPart) / (float)F.QuadPart;
 	char buffer[255];
@@ -214,15 +213,17 @@ void CraytDlg::OnBnClickedTestTexture()
 	QueryPerformanceFrequency(&F);
 	QueryPerformanceCounter(&T0);
 //	motor.tx.DrawSurface(pDC,0,10,10,1);
+	
+	CTexture *tx = &motor.texturas[0];
 
-	motor.tx.DrawSurface(pDC,0,10,10,1);
-	motor.tx.DrawSurface(pDC,1,310,10,1);
-	motor.tx.DrawSurface(pDC,2,520,10,1);
-	motor.tx.DrawSurface(pDC,3,620,10,1);
-	motor.tx.DrawSurface(pDC,4,700,10,1);
-	motor.tx.DrawSurface(pDC,5,740,10,1);
-	motor.tx.DrawSurface(pDC,6,780,10,1);
-	motor.tx.DrawSurface(pDC,7,800,10,1);
+	tx->DrawSurface(pDC,0,10,10,1);
+	tx->DrawSurface(pDC,1,310,10,1);
+	tx->DrawSurface(pDC,2,520,10,1);
+	tx->DrawSurface(pDC,3,620,10,1);
+	tx->DrawSurface(pDC,4,700,10,1);
+	tx->DrawSurface(pDC,5,740,10,1);
+	tx->DrawSurface(pDC,6,780,10,1);
+	tx->DrawSurface(pDC,7,800,10,1);
 
 //	for(int i=0;i<8;++i)
 //		motor.tx.Draw(pDC,i,0,0,400,300,1);

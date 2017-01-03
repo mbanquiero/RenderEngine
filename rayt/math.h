@@ -146,3 +146,12 @@ inline float unit_clamp(double x) {
 }
 
 int upper_power2(int x);
+
+inline BYTE clamp_to_color(float x) { x*=255;return x<0?0:x>255?255:x;};
+
+inline float saturate(float x) { return x<0?0 : x>1? 1 : x;};
+inline vec3 saturate(vec3 v) { return vec3(saturate(v.x), saturate(v.y),saturate(v.z));};
+
+inline vec3 reflect(vec3 i,vec3 n) {return i - n*(2*dot(i, n));};
+
+

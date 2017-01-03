@@ -33,12 +33,19 @@ CEngine::CEngine()
 	clr_layer[6] = RGB(100,100,255);
 	clr_layer[7] = RGB(255,100,255);
 
-	// creo la textura de test
+	cant_mat = 0;
+	cant_luces = 0;
+	cant_texturas = 0;
+	// creo la textura de test y un material standard
 	//	tx.CreateFromFile("media/chess_small.png");
 	//tx.CreateFromFile("media/chess_250.png");
-	tx.CreateFromFile("media/test_128.png");
-	cant_texturas = 0;
-	cant_mat = 0;
+	mat_std.nro_texture = CreateTexture("media/test_128.png");
+	mat_std.bmp_k = 1;
+
+
+	k_la = 0.5;			// luz ambiente
+	k_ld = 1;			// luz difusa
+	k_ls = 0.7;			// luz specular
 
 }
 
@@ -57,8 +64,13 @@ void CEngine::initFromTest()
 {
 
 	loadScene();
-//	loadMesh();
 //	quadTest();
+//	createBox(vec3(0,0,500) , vec3(500,500,500));
+//	createBox(vec3(0,700,500) , vec3(500,500,500));
+//	createBox(vec3(0,1600,500) , vec3(500,500,500));
+//	cant_luces = 1;
+//	luces[0].Position = vec3(-500,-500,3000);
+
 
 /*	F = new face3d[1000];
 	createBox(vec3(0,0,0) , vec3(1500,1500,1500));
@@ -104,7 +116,7 @@ void CEngine::quadTest()
 	F[0].tu[1] = 0;
 	F[0].tv[1] = k;
 	F[0].color[1] = vec3(0,1,0);
-
+	
 	F[0].v[2] = vec3(4000,0,0);
 	F[0].tu[2] = k;
 	F[0].tv[2] = 0;
@@ -145,7 +157,7 @@ void CEngine::createBox(vec3 pos,vec3 dim)
 	F[cant_faces].v[0] = pos;
 	F[cant_faces].v[1] = pos + dy;
 	F[cant_faces].v[2] = pos + dx + dy;
-	F[cant_faces].layer = 0;
+	F[cant_faces].layer = -1;
 	F[cant_faces].tu[0] = 0;
 	F[cant_faces].tv[0] = 0;
 	F[cant_faces].tu[1] = 0;
@@ -158,7 +170,7 @@ void CEngine::createBox(vec3 pos,vec3 dim)
 	F[cant_faces].v[0] = pos;
 	F[cant_faces].v[1] = pos + dx + dy;
 	F[cant_faces].v[2] = pos + dx;
-	F[cant_faces].layer = 0;
+	F[cant_faces].layer = -1;
 	F[cant_faces].tu[0] = 0;
 	F[cant_faces].tv[0] = 0;
 	F[cant_faces].tu[1] = 1;
@@ -173,7 +185,7 @@ void CEngine::createBox(vec3 pos,vec3 dim)
 	F[cant_faces].v[0] = pos + dz;
 	F[cant_faces].v[1] = pos + dy + dz;
 	F[cant_faces].v[2] = pos + dx + dy + dz;
-	F[cant_faces].layer = 0;
+	F[cant_faces].layer = -1;
 	F[cant_faces].tu[0] = 0;
 	F[cant_faces].tv[0] = 0;
 	F[cant_faces].tu[1] = 0;
@@ -186,7 +198,7 @@ void CEngine::createBox(vec3 pos,vec3 dim)
 	F[cant_faces].v[0] = pos + dz;
 	F[cant_faces].v[1] = pos + dx + dy + dz;
 	F[cant_faces].v[2] = pos + dx+ dz;
-	F[cant_faces].layer = 0;
+	F[cant_faces].layer = -1;
 	F[cant_faces].tu[0] = 0;
 	F[cant_faces].tv[0] = 0;
 	F[cant_faces].tu[1] = 1;
@@ -201,7 +213,7 @@ void CEngine::createBox(vec3 pos,vec3 dim)
 	F[cant_faces].v[0] = pos;
 	F[cant_faces].v[1] = pos + dz;
 	F[cant_faces].v[2] = pos + dx + dz;
-	F[cant_faces].layer = 0;
+	F[cant_faces].layer = -1;
 	F[cant_faces].tu[0] = 0;
 	F[cant_faces].tv[0] = 0;
 	F[cant_faces].tu[1] = 1;
@@ -214,7 +226,7 @@ void CEngine::createBox(vec3 pos,vec3 dim)
 	F[cant_faces].v[0] = pos;
 	F[cant_faces].v[1] = pos + dx + dz;
 	F[cant_faces].v[2] = pos + dx;
-	F[cant_faces].layer = 0;
+	F[cant_faces].layer = -1;
 	F[cant_faces].tu[0] = 0;
 	F[cant_faces].tv[0] = 0;
 	F[cant_faces].tu[1] = 1;
@@ -229,7 +241,7 @@ void CEngine::createBox(vec3 pos,vec3 dim)
 	F[cant_faces].v[0] = pos + dy;
 	F[cant_faces].v[1] = pos + dz + dy;
 	F[cant_faces].v[2] = pos + dx + dz + dy; 
-	F[cant_faces].layer = 0;
+	F[cant_faces].layer = -1;
 	F[cant_faces].tu[0] = 0;
 	F[cant_faces].tv[0] = 0;
 	F[cant_faces].tu[1] = 0;
@@ -242,7 +254,7 @@ void CEngine::createBox(vec3 pos,vec3 dim)
 	F[cant_faces].v[0] = pos + dy;
 	F[cant_faces].v[1] = pos + dx + dz + dy;
 	F[cant_faces].v[2] = pos + dx + dy;
-	F[cant_faces].layer = 0;
+	F[cant_faces].layer = -1;
 	F[cant_faces].tu[0] = 0;
 	F[cant_faces].tv[0] = 0;
 	F[cant_faces].tu[1] = 1;
@@ -256,7 +268,7 @@ void CEngine::createBox(vec3 pos,vec3 dim)
 	F[cant_faces].v[0] = pos;
 	F[cant_faces].v[1] = pos + dz;
 	F[cant_faces].v[2] = pos + dy + dz;
-	F[cant_faces].layer = 0;
+	F[cant_faces].layer = -1;
 	F[cant_faces].tu[0] = 0;
 	F[cant_faces].tv[0] = 0;
 	F[cant_faces].tu[1] = 1;
@@ -269,7 +281,7 @@ void CEngine::createBox(vec3 pos,vec3 dim)
 	F[cant_faces].v[0] = pos;
 	F[cant_faces].v[1] = pos + dy + dz;
 	F[cant_faces].v[2] = pos + dy;
-	F[cant_faces].layer = 0;
+	F[cant_faces].layer = -1;
 	F[cant_faces].tu[0] = 0;
 	F[cant_faces].tv[0] = 0;
 	F[cant_faces].tu[1] = 1;
@@ -283,7 +295,7 @@ void CEngine::createBox(vec3 pos,vec3 dim)
 	F[cant_faces].v[0] = pos + dx;
 	F[cant_faces].v[1] = pos + dz + dx;
 	F[cant_faces].v[2] = pos + dy + dz + dx;
-	F[cant_faces].layer = 0;
+	F[cant_faces].layer = -1;
 	F[cant_faces].tu[0] = 0;
 	F[cant_faces].tv[0] = 0;
 	F[cant_faces].tu[1] = 1;
@@ -295,7 +307,7 @@ void CEngine::createBox(vec3 pos,vec3 dim)
 	F[cant_faces].v[0] = pos + dx;
 	F[cant_faces].v[1] = pos + dy + dz + dx;
 	F[cant_faces].v[2] = pos + dy + dx;
-	F[cant_faces].layer = 0;
+	F[cant_faces].layer = -1;
 	F[cant_faces].tu[0] = 0;
 	F[cant_faces].tv[0] = 0;
 	F[cant_faces].tu[1] = 1;
@@ -540,42 +552,8 @@ int CEngine::debugKDTree(CDC *pDC,kd_node *p_node,int x,int y)
 }
 
 
-void CEngine::renderKDTree(CDC *pDC)
+void CEngine::render(CDC *pDC)
 {
-
-	// debug
-	if(0)
-	{
-		ox = 550; 
-		oy = 300;
-		ex = 1000 / (bb_max.x-bb_min.x) * 0.7;
-		ey = 600 / (bb_max.y-bb_min.y)* 0.7;
-
-		CPen pen,pen2,*penOld;
-		pen.CreatePen(PS_SOLID,3,RGB(100,100,0));
-		pen2.CreatePen(PS_SOLID,1,RGB(0,0,0));
-
-		penOld = pDC->SelectObject(&pen);
-		pDC->FillSolidRect(0,0,2000,2000,RGB(240,240,240));
-		pDC->SetTextColor(RGB(255,255,255));
-		char saux[255];
-		sprintf(saux,"CantF = %d",cant_faces);
-		pDC->TextOut(0,0,saux,strlen(saux));
-		debugKDTree(pDC,kd_tree,20,20);
-
-
-		pDC->SelectObject(&pen2);
-		for(int i=0;i<cant_faces;++i)
-		{
-			pDC->MoveTo(ox + F[i].v[0].x * ex ,oy + F[i].v[0].y * ey);
-			pDC->LineTo(ox + F[i].v[1].x * ex ,oy + F[i].v[1].y * ey);
-			pDC->LineTo(ox + F[i].v[2].x * ex ,oy + F[i].v[2].y * ey);
-			pDC->LineTo(ox + F[i].v[0].x * ex ,oy + F[i].v[0].y * ey);
-		}
-		pDC->SelectObject(penOld);
-
-		return;
-	}
 
 	pDC->FillSolidRect(0,0,W,H,RGB(255,0,255));
 
@@ -602,67 +580,93 @@ void CEngine::renderKDTree(CDC *pDC)
 			D.normalize();
 
 			// Ecuacion del rayo
-			// Origen del rayo LF
-			// Direccion del rayo D
 			// r = LF + k*D
-			ip_data I;
-			if(interseccionKDTree(LF,D,&I))
-			{
-
-				float k1 = I.bc_b;
-				float k2 = I.bc_g;
-				float k0 = 1-k1-k2;
-				int n = I.nro_face;
-				face3d *P = &F[n];			// primitiva
-				float tu = P->tu[0]*k0 + P->tu[1]*k1 + P->tu[2]*k2;
-				float tv = P->tv[0]*k0 + P->tv[1]*k1 + P->tv[2]*k2;
-
-				st_material *mat = P->layer>=0 ? &materiales[P->layer] : &materiales[0];
-				vec4 clr;
-				if(mat->nro_texture!=-1)
-				{
-					// texture
-				
-					// Gradiente en X
-					vec3 Ddx = nnD + Dx;
-					Ddx.normalize();
-
-					float k0dx,k1dx,k2dx;
-					plane_ray( n,LF,Ddx,&k1dx,&k2dx);
-					k0dx = 1-k1dx-k2dx;
-					float tudx = P->tu[0]*k0dx + P->tu[1]*k1dx + P->tu[2]*k2dx;
-					float tvdx = P->tv[0]*k0dx + P->tv[1]*k1dx + P->tv[2]*k2dx;
-
-					// Gradiente en Y
-					vec3 Ddy = nnD + Dy;
-					Ddy.normalize();
-					float k0dy,k1dy,k2dy;
-					plane_ray( n,LF,Ddy,&k1dy,&k2dy);
-					k0dy = 1-k1dy-k2dy;
-					float tudy = P->tu[0]*k0dy + P->tu[1]*k1dy + P->tu[2]*k2dy;
-					float tvdy = P->tv[0]*k0dy + P->tv[1]*k1dy + P->tv[2]*k2dy;
-
-					float ddx = vec3(tudx-tu, tvdx-tv , 0).length();
-					float ddy = vec3(tudy-tu, tvdy-tv , 0).length();
-
-					clr = texturas[mat->nro_texture].tex2Dgrad(tu,tv,ddx,ddy);
-					//clr = texturas[mat->nro_texture].tex2Dlod(tu,tv,0);
-				}
-				else
-				{
-					// color difuso
-					clr.x = mat->Diffuse.x;
-					clr.y = mat->Diffuse.y;
-					clr.z = mat->Diffuse.z;
-					clr.w = 1.0;				// alpha = opaco
-				}
-				pDC->SetPixel(x,y,RGB(clr.x*255,clr.y*255,clr.z*255));
-			}
-			else
-				pDC->SetPixel(x,y,RGB(0,0,0));
+			vec4 clr = shade(LF,D,nnD);
+			BYTE r = clamp_to_color(clr.x);
+			BYTE g = clamp_to_color(clr.y);
+			BYTE b = clamp_to_color(clr.z);
+			pDC->SetPixel(x,y,RGB(r,g,b));
 
 		}
 	}
+}
+
+
+
+vec4 CEngine::shade(vec3 p,vec3 d,vec3 nnD,int r_deep)
+{
+	ip_data I;
+	vec4 clr = vec4(0,0,0,1);
+	if(ray_intersects(p,d,&I))
+	{
+
+		float k1 = I.bc_b;
+		float k2 = I.bc_g;
+		float k0 = 1-k1-k2;
+		int n = I.nro_face;
+		face3d *P = &F[n];			// primitiva
+		// interpolo las coord de texturas
+		float tu = P->tu[0]*k0 + P->tu[1]*k1 + P->tu[2]*k2;
+		float tv = P->tv[0]*k0 + P->tv[1]*k1 + P->tv[2]*k2;
+		// interpolo las normales x vertices
+		vec3 Normal = P->n[0]*k0 + P->n[1]*k1 + P->n[2]*k2;
+		Normal.normalize();
+				
+		st_material *mat = P->layer>=0 ? &materiales[P->layer] : &mat_std;
+		if(mat->nro_texture!=-1)
+		{
+			// texture
+			// Gradiente en X
+			vec3 Ddx = nnD + Dx;
+			Ddx.normalize();
+
+			float k0dx,k1dx,k2dx;
+			plane_ray( n,LF,Ddx,&k1dx,&k2dx);
+			k0dx = 1-k1dx-k2dx;
+			float tudx = P->tu[0]*k0dx + P->tu[1]*k1dx + P->tu[2]*k2dx;
+			float tvdx = P->tv[0]*k0dx + P->tv[1]*k1dx + P->tv[2]*k2dx;
+
+			// Gradiente en Y
+			vec3 Ddy = nnD + Dy;
+			Ddy.normalize();
+			float k0dy,k1dy,k2dy;
+			plane_ray( n,LF,Ddy,&k1dy,&k2dy);
+			k0dy = 1-k1dy-k2dy;
+			float tudy = P->tu[0]*k0dy + P->tu[1]*k1dy + P->tu[2]*k2dy;
+			float tvdy = P->tv[0]*k0dy + P->tv[1]*k1dy + P->tv[2]*k2dy;
+
+			float ddx = vec3(tudx-tu, tvdx-tv , 0).length();
+			float ddy = vec3(tudy-tu, tvdy-tv , 0).length();
+
+			clr = texturas[mat->nro_texture].tex2Dgrad(tu,tv,ddx,ddy);
+			//clr = texturas[mat->nro_texture].tex2Dlod(tu,tv,0);
+		}
+		else
+		{
+			// color difuso
+			clr.x = mat->Diffuse.x;
+			clr.y = mat->Diffuse.y;
+			clr.z = mat->Diffuse.z;
+			clr.w = 1.0;				// alpha = opaco
+		}
+
+		vec3 LightDiffuse,LightSpecular;
+		ComputeLighting(I.ip,Normal,LightDiffuse,LightSpecular);
+		clr.x = clr.x*(saturate(k_la+LightDiffuse.x)) + LightSpecular.x;
+		clr.y = clr.y*(saturate(k_la+LightDiffuse.y)) + LightSpecular.y;
+		clr.z = clr.z*(saturate(k_la+LightDiffuse.z)) + LightSpecular.z;
+
+		/*
+		if(mat->kr>0 && r_deep<5)
+		{
+			// reflexion
+			vec3 r = reflect(d,Normal);
+			clr = clr * (1-mat->kr) + shade(I.ip + r*3.0 , r, r_deep+1) * mat->kr;
+		}
+		*/
+	}
+
+	return clr;
 }
 
 
@@ -673,7 +677,7 @@ struct st_traverse_node
 };
 
 
-bool CEngine::interseccionKDTree(vec3 O,vec3 D,ip_data *I)
+bool CEngine::ray_intersects(vec3 O,vec3 D,ip_data *I)
 {
 	float R = 10000000;
 	float bc_b;
@@ -725,15 +729,9 @@ bool CEngine::interseccionKDTree(vec3 O,vec3 D,ip_data *I)
 			{
 				int n = p_node->p_list[i];
 				float b,g,t;
-				/*
-				vec3 A = F[n].v[0];
-				vec3 B = F[n].v[1];
-				vec3 C = F[n].v[2];
-				if(triangle_intersection( A,B,C,O,D,&t,&b,&g))
-				*/
 				if(triangle_ray_SSE( n,&t,&b,&g))
 				{
-					if(t>0 && t<R && t>=tnear-1 && t<=tfar+1)
+					if(t>1 && t<R && t>=tnear-1 && t<=tfar+1)
 					{
 						// actualizo las coordenadas barycentricas
 						bc_b = b;
@@ -825,98 +823,136 @@ bool CEngine::interseccionKDTree(vec3 O,vec3 D,ip_data *I)
 
 
 
-
-
-void CEngine::render(CDC *pDC)
+bool CEngine::shadow_ray_intersects(vec3 O,vec3 D,float rmin,float rmax)
 {
-	pDC->FillSolidRect(0,0,W,H,RGB(255,0,255));
-	// camara simple
-	N = (LA-LF);						// viewing direction
-	N.normalize();
-	V = cross(N,VUP);
-	V.normalize();
-	U = cross(V,N);
-	double k = 2*tan(fov/2)/H;
-	Dy = U*k;
-	Dx = V*k;
-
-	int x,y;
-	for(x=0;x<W;++x)
-	{
-		for(y=0;y<H;++y)
-		{
-			//x = W/2;
-			//y = H/2;
-			// Direccion of each pixel
-			vec3 D = N + Dy*(0.5*(H-2*y)) + Dx*(0.5*(2*x-W));
-			D.normalize();
-
-			// Ecuacion del rayo
-			// Origen del rayo LF
-			// Direccion del rayo D
-			// r = LF + k*D
-			ip_data I;
-			if(interseccion(LF,D,&I))
-				pDC->SetPixel(x,y,RGB(255*I.bc_b, 255*I.bc_g, 0));
-			else
-				pDC->SetPixel(x,y,RGB(0,0,0));
-
-		}
-	}
-}
-
-
-bool CEngine::interseccion(vec3 O,vec3 D,ip_data *I)
-{
-	float R = 10000000;
-	vec3 MD = D*(-1);
 	float bc_b;
 	float bc_g;
 	int nro_face = -1;
 
+
+	
+	float tnear = rmin, tfar =rmax;
+	/*// chequeo la interseccion con el bounding box de la escena o 
+	if(!box_intersection(bb_min, bb_max, O,D,&tnear,&tfar))
+		// el rayo no interseca con la escena
+			return false;
+	*/
+
+	// precomputo la inv de direccion del rayo
+	float ray_invdir[] = {0,0,0};
+	if(fabs(D.x)>0.00001)
+		ray_invdir[0]	= 1.f/D.x;
+	if(fabs(D.y)>0.00001)
+		ray_invdir[1]	= 1.f/D.y;
+	if(fabs(D.z)>0.00001)
+		ray_invdir[2]	= 1.f/D.z;
+	float ray_O[] = {O.x,O.y,O.z};
+	float ray_dir[] = {D.x,D.y,D.z};
+
+	// sse triangle - ray intersection
 	SSE_O = _mm_setr_ps(O.x, O.y, O.z, 0);
 	SSE_D = _mm_setr_ps(D.x, D.y, D.z, 0);
 
-	ray_O = O;
-	ray_D = D;
+	// lista de caras a chequear
+	int aux_F[10000];
+	int cant_f;
 
+	// comienzo el traverse con el nodo root = (kd_tree, tnear, tfar)
+	kd_node *p_node = kd_tree;
+	// pila de pendientes
+	int p_stack = 0;
+	st_traverse_node S[64];
 
-	// Recorro todos los objetos, y determino la interseccion
-	// entre el rayo de luz y la superficie del objeto
-
-	for(int i=0;i<cant_faces;++i)
+	while(p_node!=NULL)
 	{
-		vec3 A = F[i].v[0];
-		vec3 B = F[i].v[1];
-		vec3 C = F[i].v[2];
-		float b,g,t;
-		// version SSE 
-		if(triangle_ray_SSE(i,&t,&b,&g))
-		//if(triangle_ray(i,O,D,&t,&b,&g))
+		// el rayo atraviesa el nodo p_node entrando por tnear y saliendo por tfar. 
+		if(p_node->p_list)
 		{
-			if(t>0 && t<R)
+			// nodo hoja: chequeo la interseccion con la lista de caras en dicho nodo
+			for(int i=0;i<p_node->cant_f;++i)				
 			{
-				// actualizo las coordenadas barycentricas
-				bc_b = b;
-				bc_g = g;
-				R = t;
-				nro_face = i;
+				int n = p_node->p_list[i];
+				float b,g,t;
+				if(triangle_ray_SSE( n,&t,&b,&g))
+				{
+					if(t>tnear && t<=tfar+1)
+					{
+						return true;
+					}
+				}
 			}
+
+			// termine de procesar la rama (llegue a un nodo hoja). Si tengo algo pendiente en la pila, lo saco de ahi
+			if(p_stack>0)
+			{
+				p_stack--;
+				p_node = S[p_stack].p_nodo;
+				tnear = S[p_stack].tnear;
+				tfar = S[p_stack].tfar;
+			}
+			else
+				p_node = NULL;			// termino
+
 		}
+		else
+		{
+			// si es un nodo interior: 
+			// determino en que orden tengo que chequear los nodos hijos 
+			int p = p_node->split_plane;
+			float tplane = (p_node->split - ray_O[p])  * ray_invdir[p];
 
+			kd_node *p_near , *p_far;
+			if(ray_O[p]<=p_node->split || (ray_O[p] == p_node->split && ray_dir[p] <= 0))
+			{
+				// proceso primero el Left node y luego el Right node
+				p_near = p_node->p_left;
+				p_far = p_node->p_right;
+			}
+			else
+			{
+				// proceso primero el Right node y luego el Left node
+				p_near = p_node->p_right;
+				p_far = p_node->p_left;
+			}
+
+			// para procesar ambos nodos el tplane tiene que estar entre tnear y tfar
+			if(tplane>tfar || tplane<=0)
+			{
+				// el rayo solo pasa por el primer nodo (el nodo cercano) : avanzo hacia el nodo cercano
+				p_node = p_near;		
+			}
+			else
+				if(tplane<tnear)
+				{
+					// el rayo solo pasa por el segundo nodo (el nodo lejano) : avanzo hacia el nodo lejano
+					p_node = p_far;
+				}
+				else
+				{
+					// pasa por ambos nodos: 
+
+					// tengo que evaluar el segundo nodo luego del primero, asi que lo pongo en la pila de pendientes
+					// el nodo far va desde tplane hasta tfar
+					S[p_stack].p_nodo = p_far;
+					S[p_stack].tnear = tplane;
+					S[p_stack].tfar = tfar;
+					p_stack++;
+
+					// a continuacion proceso el nodo  cercano: que va desde tnear, hasta tplane
+					p_node = p_near;		
+					tfar = tplane;
+					// tnear queda como esta
+				}
+		}
 	}
 
-	if(nro_face!=-1)
-	{
-		I->ip = O + D*R;
-		I->t = R;
-		I->bc_b = bc_b;
-		I->bc_g = bc_g;
-		I->nro_face = nro_face;
-	}
-
-	return nro_face!=-1?true:false;
+	return false;
 }
+
+
+
+
+
 
 
 
@@ -1268,6 +1304,45 @@ void CEngine::loadScene()
 	fgets(buffer,sizeof(buffer),fp);
 	LA.z = atof(buffer);
 
+	fgets(buffer,sizeof(buffer),fp);
+	cant_luces = atoi(buffer);
+	for(int i=0;i<cant_luces;++i)
+	{
+		fgets(buffer,sizeof(buffer),fp);
+		luces[i].enabled = atoi(buffer);
+		fgets(buffer,sizeof(buffer),fp);
+		luces[i].Direction.x = atof(buffer);
+		fgets(buffer,sizeof(buffer),fp);
+		luces[i].Direction.y = atof(buffer);
+		fgets(buffer,sizeof(buffer),fp);
+		luces[i].Direction.z = atof(buffer);
+
+		fgets(buffer,sizeof(buffer),fp);
+		luces[i].Position.x = atof(buffer);
+		fgets(buffer,sizeof(buffer),fp);
+		luces[i].Position.y = atof(buffer);
+		fgets(buffer,sizeof(buffer),fp);
+		luces[i].Position.z = atof(buffer);
+
+		fgets(buffer,sizeof(buffer),fp);
+		luces[i].Diffuse.x = atof(buffer);
+		fgets(buffer,sizeof(buffer),fp);
+		luces[i].Diffuse.y = atof(buffer);
+		fgets(buffer,sizeof(buffer),fp);
+		luces[i].Diffuse.z = atof(buffer);
+
+		fgets(buffer,sizeof(buffer),fp);
+		luces[i].Power = atof(buffer);
+		fgets(buffer,sizeof(buffer),fp);
+		luces[i].Type = atoi(buffer);
+		fgets(buffer,sizeof(buffer),fp);
+		luces[i].Phi = atof(buffer);
+		fgets(buffer,sizeof(buffer),fp);
+		luces[i].Theta = atof(buffer);
+		fgets(buffer,sizeof(buffer),fp);
+		luces[i].wlight = atof(buffer);
+
+	}
 
 	fgets(buffer,sizeof(buffer),fp);
 	cant_mat = atoi(buffer);
@@ -1282,18 +1357,21 @@ void CEngine::loadScene()
 		materiales[i].bmp_k = atoi(buffer);
 
 		fgets(buffer,sizeof(buffer),fp);
-		materiales[i].Ambient.x = atof(buffer);
-		fgets(buffer,sizeof(buffer),fp);
-		materiales[i].Ambient.y = atof(buffer);
-		fgets(buffer,sizeof(buffer),fp);
-		materiales[i].Ambient.z = atof(buffer);
-
-		fgets(buffer,sizeof(buffer),fp);
 		materiales[i].Diffuse.x = atof(buffer);
 		fgets(buffer,sizeof(buffer),fp);
 		materiales[i].Diffuse.y = atof(buffer);
 		fgets(buffer,sizeof(buffer),fp);
 		materiales[i].Diffuse.z = atof(buffer);
+
+		fgets(buffer,sizeof(buffer),fp);
+		materiales[i].k0 = atof(buffer);
+		fgets(buffer,sizeof(buffer),fp);
+		materiales[i].k1 = atof(buffer);
+		fgets(buffer,sizeof(buffer),fp);
+		materiales[i].kr = atof(buffer);
+		materiales[i].kr = 0.5;
+		fgets(buffer,sizeof(buffer),fp);
+		materiales[i].kt = atof(buffer);
 
 	}
 
@@ -1371,104 +1449,6 @@ void CEngine::loadScene()
 
 
 
-void CEngine::loadMesh()
-{
-	FILE *fp = fopen("c:/leptonpack/escena.dat" , "rt");
-	if(!fp)
-		return;
-	char buffer[255];
-
-	fgets(buffer,sizeof(buffer),fp);
-	LF.x = atof(buffer);
-	fgets(buffer,sizeof(buffer),fp);
-	LF.y = atof(buffer);
-	fgets(buffer,sizeof(buffer),fp);
-	LF.z = atof(buffer);
-	fgets(buffer,sizeof(buffer),fp);
-	LA.x = atof(buffer);
-	fgets(buffer,sizeof(buffer),fp);
-	LA.y = atof(buffer);
-	fgets(buffer,sizeof(buffer),fp);
-	LA.z = atof(buffer);
-
-	fgets(buffer,sizeof(buffer),fp);
-	cant_faces = atoi(buffer);
-	F = new face3d[cant_faces];
-	float min_x = 100000;
-	float min_y = 100000;
-	float min_z = 100000;
-	float max_x = -100000;
-	float max_y = -100000;
-	float max_z = -100000;
-	for(int i=0;i<cant_faces;++i)
-	{
-		fgets(buffer,sizeof(buffer),fp);
-		F[i].layer = atoi(buffer);
-		for(int j=0;j<3;++j)
-		{
-			// vertex position
-			fgets(buffer,sizeof(buffer),fp);
-			float x = F[i].v[j].x = atof(buffer);
-			fgets(buffer,sizeof(buffer),fp);
-			float y = F[i].v[j].y = atof(buffer);
-			fgets(buffer,sizeof(buffer),fp);
-			float z = F[i].v[j].z = atof(buffer);
-
-			// text coords
-			fgets(buffer,sizeof(buffer),fp);
-			F[i].tu[j] = atof(buffer);
-			fgets(buffer,sizeof(buffer),fp);
-			F[i].tv[j] = atof(buffer);
-
-			// vertex normal
-			fgets(buffer,sizeof(buffer),fp);
-			F[i].n[j].x = atof(buffer);
-			fgets(buffer,sizeof(buffer),fp);
-			F[i].n[j].y = atof(buffer);
-			fgets(buffer,sizeof(buffer),fp);
-			F[i].n[j].z = atof(buffer);
-
-
-			if(x<min_x)
-				min_x = x;
-			if(y<min_y)
-				min_y = y;
-			if(z<min_z)
-				min_z = z;
-			if(x>max_x)
-				max_x = x;
-			if(y>max_y)
-				max_y = y;
-			if(z>max_z)
-				max_z = z;
-		}
-	}
-
-	float rx = (max_x + min_x)/2;
-	float ry = (max_y + min_y)/2;
-	float rz = (max_z + min_z)/2;
-
-	float dx = (max_x - min_x)/2;
-	float dy = (max_y - min_y)/2;
-	float dz = (max_z - min_z)/2;
-
-	bb_min = vec3(-dx,-dy,-dz);
-	bb_max = vec3(dx,dy,dz);
-	
-	/*
-	for(int i=0;i<cant_faces;++i)
-	{
-		for(int j=0;j<3;++j)
-		{
-			F[i].v[j].x -= rx;
-			F[i].v[j].y -= ry;
-			F[i].v[j].z -= rz;
-		}
-	}
-	*/
-
-	fclose(fp);
-}
 
 float CEngine::best_split(int eje,kd_node *p_node)
 {
@@ -1760,124 +1740,173 @@ bool ld_tx_rec(FILE *fp, char *fname,float &k)
 }
 
 
-
-/*
-bool CEngine::interseccionKDTreeAnt(vec3 O,vec3 D,ip_data *I)
+float CEngine::ComputeShadow(int i,vec3 P)
 {
-	float R = 10000000;
-	vec3 MD = D*(-1);
-	float bc_b;
-	float bc_g;
-	int nro_face = -1;
 
-	// precomputo la inv de direccion del rayo
-	float ray_invdir[] = {0,0,0};
-	if(fabs(D.x)>0.00001)
-		ray_invdir[0]	= 1.f/D.x;
-	if(fabs(D.y)>0.00001)
-		ray_invdir[1]	= 1.f/D.y;
-	if(fabs(D.z)>0.00001)
-		ray_invdir[2]	= 1.f/D.z;
-	float ray_O[] = {O.x,O.y,O.z};
-	float ray_dir[] = {D.x,D.y,D.z};
+	return 1;
+	if(!luces[i].enabled)
+		return 1;
+
+	// Point light
+	//if(shadow_ray_intersects(SO,SD))
+	//	clr.x*=0.1 , clr.y*=0.1, clr.z*=0.1;
+
+	vec3 O = luces[i].Position;
+	vec3 D = O-P;
+	D.normalize();
+	
+	// area light
+	vec3 V = cross(D,VUP);
+	V.normalize();
+	vec3 U = cross(V,D);
+
+	return adaptative_sampling(O,P,U,V,25);
+
+}
 
 
-	// lista de caras a chequear
-	int aux_F[10000];
-	int cant_f;
-
-	// pila de busqueda
-	int p_stack = 0;
-	kd_node *S[100];
-	S[p_stack++] = kd_tree;
-	while(p_stack)
+float CEngine::adaptative_sampling(vec3 O,vec3 P,vec3 &U ,vec3 &V,float dw)
+{
+	// agrego fuentes luminosas puntuales (virtual point lights) en el punto central y en los 4 extremos
+	int cant_s = 0;
+	int cant_vpl=0;
+	vec3 VPL[100];
+	VPL[cant_vpl++] = O;
+	VPL[cant_vpl++] = O + V*dw + U*dw;
+	VPL[cant_vpl++] = O + V*dw - U*dw;
+	VPL[cant_vpl++] = O - V*dw + U*dw;
+	VPL[cant_vpl++] = O - V*dw - U*dw;
+	// y otros n aleatoreos
+	for(int t=0;t<6;++t)
 	{
-		// saco el nodo de la pila
-		kd_node *p_node = S[--p_stack];
+		float r0 = 2*dw*(rand()/(float)RAND_MAX-0.5);
+		float r1 = 2*dw*(rand()/(float)RAND_MAX-0.5);
+		VPL[cant_vpl++] = O + V*r0 + U*r1;
+	}
 
-		// chequeo la interseccion
-		float tnear, tfar;
-		if(box_intersection(p_node->p_min , p_node->p_max , O,D,&tnear,&tfar))
+	for(int t=0;t<cant_vpl;++t)
+	{
+		vec3 D = VPL[t]- P;
+		float tfar = D.length();
+		D = D * (1/tfar);
+		cant_s += shadow_ray_intersects(P,D,1.0,tfar);
+	}
+
+	if(dw<4)
+		return 1.0 - (float)cant_s / (float)cant_vpl;
+	else
+	if(cant_s==0)
+		return 1;
+	else
+	if(cant_s==cant_vpl)
+		return 0;
+
+	// llamo en forma recursiva donde mas lo necesito: 
+	dw /= 2;
+	return	
+		adaptative_sampling(O-V*dw-U*dw,P,U ,V,dw)*0.25 +  
+		adaptative_sampling(O-V*dw+U*dw,P,U ,V,dw)*0.25 +
+		adaptative_sampling(O+V*dw-U*dw,P,U ,V,dw)*0.25 +
+		adaptative_sampling(O+V*dw+U*dw,P,U ,V,dw)*0.25 ;
+
+}
+
+
+
+
+// luz puntual, emite luz hacia todas las direcciones
+void CEngine::ComputePointLight(int i, vec3 Pos,vec3 N,float &ld, float &ls)
+{
+	
+
+	float k_shadow = ComputeShadow(i,Pos);
+	if(k_shadow<0.001)
+		return;			// el punto esta en sombras, no hace falta computar la ecuacion de phong
+
+	// 1- calculo la luz diffusa
+	vec3 LD= luces[i].Position - Pos;
+	LD.normalize();
+	float cf = dot(N,LD);
+	ld = saturate(cf)*k_ld*k_shadow;
+
+	// 2- calcula la reflexion specular
+	float mat_ks = 0.7;			// todo: llevar a material
+	ls = 0;
+	if(mat_ks>0)
+	{
+		vec3 D = Pos-LF;
+		D.normalize();
+		float ks = saturate(dot(reflect(LD,N), D));
+		ks = pow(ks,10);
+		ls += ks*mat_ks*k_ls*k_shadow;
+	}
+}
+
+void CEngine::ComputeSpotLight(int i, vec3 Pos,vec3 N,float &ld, float &ls)
+{
+	// caso b: spot light, emite luz en una direccion especifica
+	ld = 0;
+	ls = 0;
+
+	vec3 vLight = luces[i].Position - Pos;
+	vLight.normalize();
+
+	float mat_ks = 0.7;			// todo: llevar a material
+
+	float cono = dot( vLight, luces[i].Direction);
+	// Verifico si el punto cae sobre el cono de luz
+	if( cono > luces[i].Phi)
+	{
+		// es iluminado por la luz
+		float K = 1;
+		if( cono <= luces[i].Theta)
+			// Fall off
+			K = (cono-luces[i].Phi) / (luces[i].Theta-luces[i].Phi);
+
+		float k_shadow = ComputeShadow(i,Pos);
+		if(k_shadow<0.001)
+			return;			// el punto esta en sombras, no hace falta computar la ecuacion de phong
+
+		K*=k_shadow;
+
+		vec3 LD = vLight*(-1);
+		float cf = dot(LD,N);
+		ld = saturate(cf)*k_ld*K;
+
+		// 2- calcula la reflexion specular
+		if(mat_ks>0)
 		{
-			// el rayo atraviesa el nodo 
-			if(p_node->p_list)
-			{
-				// nodo hoja: chequeo la interseccion con la lista de caras en dicho nodo
-				for(int i=0;i<p_node->cant_f;++i)				
-				{
-					int n = p_node->p_list[i];
-					vec3 A = F[n].v[0];
-					vec3 B = F[n].v[1];
-					vec3 C = F[n].v[2];
-					float b,g,t;
-					if(triangle_intersection( A,B,C,O,D,&t,&b,&g))
-					{
-						if(t>=tnear-1 && t<=tfar+1 && t<R)
-						{
-							// actualizo las coordenadas barycentricas
-							bc_b = b;
-							bc_g = g;
-							R = t;
-							nro_face = n;
-						}
-						else
-						{
-							int bp = 1;
-						}
-					}
-				}
-
-				// early termination
-				if(nro_face!=-1)
-				{
-					I->ip = O + D*R;
-					I->t = R;
-					I->bc_b = bc_b;
-					I->bc_g = bc_g;
-					I->nro_face = nro_face;
-					return true;
-				}
-
-			}
-			else
-			{
-				// el rayo entra por tnear y sale por tfar
-				// determino en que orden tengo que chequear los nodos
-				int p = p_node->split_plane;
-				float tplane = (p_node->split - ray_O[p])  * ray_invdir[p];
-				// para procesar ambos nodos el tplane tiene que estar entre tnear y tfar
-				bool pNear = true , pFar = true;
-				if(tplane>tfar)
-					pFar = false;		// no proceso el nodo mas lejano al origen del rayo 
-				else
-					if(tplane<tnear)
-						pNear = false;		// no proceso el nodo mas cercano
-
-				kd_node *p_near , *p_far;
-
-				if(ray_O[p]<=p_node->split || (ray_O[p] == p_node->split && ray_dir[p] <= 0))
-				{
-					// proceso primero el Left node y luego el Right node
-					p_near = p_node->p_left;
-					p_far = p_node->p_right;
-				}
-				else
-				{
-					// proceso primero el Right node y luego el Left node
-					p_near = p_node->p_right;
-					p_far = p_node->p_left;
-				}
-
-
-				if(p_far!=NULL && pFar)
-					S[p_stack++] = p_far;
-				if(p_near!=NULL && pNear)
-					S[p_stack++] = p_near;
-
-
-			}
+			vec3 D = Pos-LF;
+			D.normalize();
+			float ks = saturate(dot(reflect(LD,N), D));
+			ks = pow(ks,10);
+			ls = ks*mat_ks*k_ls*K;
 		}
 	}
-	return false;
+	
 }
-*/
+
+
+void CEngine::ComputeLighting(vec3 Pos,vec3 N,vec3 &Diffuse,vec3 &Specular)
+{
+	Diffuse = Specular = vec3(0,0,0);
+	for(int i=0;i<cant_luces;++i)
+	if(luces[i].enabled)
+	{
+
+		// computo diffuse y especular 
+		float kd,ks;
+		//float2 L = g_LightType[i]==2?ComputeSpotLight(i,Pos,N):ComputePointLight(i,Pos,N);
+		//ComputeSpotLight(i,Pos,N,kd,ks);
+		ComputePointLight(i,Pos,N,kd,ks);
+
+		// intensidad de la fuente luminosa 
+		float Intensidad = 1;
+		vec3 lightColor = luces[i].Diffuse;
+
+		// al diffuse lo clampeo entre 0 y 1
+		Diffuse = Diffuse + saturate(lightColor*(Intensidad*kd));
+		// el especular puede pasarse de 1 
+		Specular = Specular + lightColor*(Intensidad*ks);
+	}
+}

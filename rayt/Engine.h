@@ -9,15 +9,30 @@
 #define SAFE_DELETE(a) if( (a) != NULL ) delete (a); (a) = NULL;
 
 
+struct st_ligth
+{
+	bool enabled;
+	vec3 Direction;
+	vec3 Position;
+	vec3 Diffuse;
+	char Type;
+	float Power;
+	float Phi;
+	float Theta;
+	float wlight;
+};
+
+
 struct st_material 
 {
 	int nro_texture;
 	int bmp_k;
-	vec3 Diffuse;
-	vec3 Ambient;
-	vec3 Specular;
-	vec3 Emissive;
-	float Power;
+	vec3 Diffuse;			// color difuso 
+	float k0;				// diffuse reflection
+	float k1;				// specular reflection
+	float kt;				// Coeficiente de transparencia
+	float kr;				// Coeficiente de Reflexion (espejos)
+	
 };
 
 
@@ -106,12 +121,15 @@ public:
 	COLORREF clr_layer[8];
 
 	// textura de prueba
-	CTexture tx;
 	CTexture texturas[MAX_TEXTURAS];
 	int cant_texturas;
 	// materiales
 	int cant_mat;
 	st_material materiales[MAX_MATERIALES];
+	st_material mat_std;
+	// luces
+	int cant_luces;
+	st_ligth luces[16];
 
 
 
@@ -119,7 +137,6 @@ public:
 	~CEngine();
 
 	void render(CDC *pDC);
-	bool interseccion(vec3 p,vec3 d,ip_data *I);
 
 	// precalculos x face
 	void precalc();			// calculos que no dependen del rayo
@@ -131,18 +148,20 @@ public:
 	kd_node *createKDTreeNode(vec3 pmin, vec3 pmax,int deep,int cant_f,int *p_list);
 	void createKDTree(); 
 	void deleteKDTreeNode(kd_node *p_node);
-	void renderKDTree(CDC *pDC);
-	bool interseccionKDTree(vec3 p,vec3 d,ip_data *I);
 	int debugKDTree(CDC *pDC,kd_node *p_node,int x,int y);
 	float best_split(int eje,kd_node *p_node);
 	int best_split(kd_node *p_node,float *best_s);
+
+	// intersect core
+	vec4 shade(vec3 p,vec3 d,vec3 nnD,int r_deep=0);
+	bool ray_intersects(vec3 p,vec3 d,ip_data *I);
+	bool shadow_ray_intersects(vec3 p,vec3 d,float rmin,float rmax);
 
 
 
 	void initFromTest();
 	void quadTest();
 	void createBox(vec3 pos,vec3 dim);
-	void loadMesh();
 	void loadScene();				// carga un archivo de 3ds (del exporter)
 
 
@@ -165,6 +184,20 @@ public:
 
 	// texturas
 	int CreateTexture(const char *fname);
+
+	// sombras
+	float ComputeShadow(int i,vec3 P);
+	float adaptative_sampling(vec3 O,vec3 P,vec3 &U,vec3 &V,float dw);
+
+	// modelo de iluminacion
+	void ComputeSpotLight(int i, vec3 Pos,vec3 N,float &ld,float &ls);
+	void ComputePointLight(int i, vec3 Pos,vec3 N,float &ld, float &ls);
+
+	void ComputeLighting(vec3 Pos,vec3 N,vec3 &Diffuse,vec3 &Specular);
+	float k_la;							// luz ambiente global
+	float k_ld;							// luz difusa
+	float k_ls;							// luz specular
+
 
 
 };
