@@ -14,10 +14,13 @@ class vec3
 public:
 	float x,y,z;
 
+
 	vec3(float a=0,float b=0, float c=0);
 	vec3 operator-(vec3 &q);
-	vec3 operator+(vec3 &q);
+	vec3 operator+(const vec3 &q);
 	vec3 operator*(float k);
+	float operator [](int i) {return i==0?x : i==1? y : z;};
+	//float operator [](int i) {return (&x)[i];};
 	float length();
 	void normalize();
 	void rotar_xz(float an);
@@ -54,6 +57,8 @@ public:
 	float x,y,z,w;
 
 	vec4(float a=0,float b=0, float c=0,float d=0);
+	vec4 operator*(float k);
+	vec4 operator+(const vec4 &q);
 
 };
 
@@ -78,7 +83,6 @@ class mat4
 
 bool intersect(vec3 orig , vec3 dir, vec3 center,float radio) ;
 
-int box_intersection(vec3 A, vec3 B,vec3 O,	vec3 D,	float* tnear , float *tfar);
 
 // chequeo si un bounding box esta dentro de otro(o parcialmente adentro)
 bool box_overlap(vec3 Amin,vec3 Amax,vec3 Bmin,vec3 Bmax );
@@ -90,12 +94,14 @@ inline void swap(float *a,float *b)
 	*a = *b;
 	*b = c;
 }
-
+void sort(float *v,int cant);
 
 //SSE
 #include <iostream>
 
-inline __m128 CrossProduct(__m128 a, __m128 b)
+
+
+inline __m128 sse_cross(__m128 a, __m128 b)
 {
 	return _mm_sub_ps(
 		_mm_mul_ps(_mm_shuffle_ps(a, a, _MM_SHUFFLE(3, 0, 2, 1)), _mm_shuffle_ps(b, b, _MM_SHUFFLE(3, 1, 0, 2))), 
@@ -103,12 +109,40 @@ inline __m128 CrossProduct(__m128 a, __m128 b)
 		);
 }
 
-inline vec3 fast_cross( vec3 u , vec3 v)
+
+// esta mal
+inline __m128 cross_4shuffles(__m128 a, __m128 b)
 {
-	float r[4];
-	_mm_storeu_ps(r , CrossProduct(_mm_setr_ps(u.x, u.y, u.z, 0) , _mm_setr_ps(v.x, v.y, v.z, 0)));
-	return vec3(r[0],r[1],r[2]);
+	__m128 a_yzx = _mm_shuffle_ps(a, a, _MM_SHUFFLE(3, 0, 2, 1));
+	__m128 a_zxy = _mm_shuffle_ps(a, a, _MM_SHUFFLE(3, 1, 0, 2));
+	__m128 b_zxy = _mm_shuffle_ps(b, b, _MM_SHUFFLE(3, 1, 0, 1));
+	__m128 b_yzx = _mm_shuffle_ps(b, b, _MM_SHUFFLE(3, 0, 2, 1));
+	return _mm_sub_ps(_mm_mul_ps(a_yzx, b_zxy), _mm_mul_ps(a_zxy, b_yzx));
+}
+
+// no mejora 
+inline __m128 cross_3shuffles(__m128 a, __m128 b)
+{
+	__m128 a_yzx = _mm_shuffle_ps(a, a, _MM_SHUFFLE(3, 0, 2, 1));
+	__m128 b_yzx = _mm_shuffle_ps(b, b, _MM_SHUFFLE(3, 0, 2, 1));
+	__m128 c = _mm_sub_ps(_mm_mul_ps(a, b_yzx), _mm_mul_ps(a_yzx, b));
+	return _mm_shuffle_ps(c, c, _MM_SHUFFLE(3, 0, 2, 1));
 }
 
 
+#define M_LOG2E 1.44269504088896340736 //log2(e)
 
+inline long double log2(const long double x){
+	return  log(x) * M_LOG2E;
+}
+
+inline int int_floor(double x) { 
+	return (int)(x+100000) - 100000; 
+}
+
+inline float unit_clamp(double x) { 
+	x+=100000;
+	return x-(int)x; 
+}
+
+int upper_power2(int x);

@@ -7,6 +7,7 @@
 #include "raytDlg.h"
 #include "afxdialogex.h"
 #include "engine.h"
+#include <smmintrin.h>
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -34,6 +35,8 @@ BEGIN_MESSAGE_MAP(CraytDlg, CDialogEx)
 	ON_WM_QUERYDRAGICON()
 	ON_BN_CLICKED(IDOK, &CraytDlg::OnBnClickedOk)
 	ON_BN_CLICKED(IDC_TEST_SSE, &CraytDlg::OnBnClickedTestSse)
+	ON_BN_CLICKED(IDC_TEST_SSE2, &CraytDlg::OnBnClickedTestSse2)
+	ON_BN_CLICKED(IDC_TEST_TEXTURE, &CraytDlg::OnBnClickedTestTexture)
 END_MESSAGE_MAP()
 
 
@@ -99,7 +102,6 @@ void CraytDlg::OnBnClickedOk()
 	LARGE_INTEGER F,T0,T1;   // address of current frequency
 	QueryPerformanceFrequency(&F);
 	QueryPerformanceCounter(&T0);
-	//motor.renderOctree(pDC);
 	//motor.render(pDC);
 	motor.renderKDTree(pDC);
 
@@ -114,6 +116,27 @@ void CraytDlg::OnBnClickedOk()
 
 void CraytDlg::OnBnClickedTestSse()
 {
+
+	/*
+	vec3 A = vec3(1,1,1);
+	vec3 B = vec3(2,-1,-2);
+
+	LARGE_INTEGER F,T0,T1;   // address of current frequency
+	QueryPerformanceFrequency(&F);
+	QueryPerformanceCounter(&T0);
+
+	for(int j=0;j<100;++j)
+		for(int i=0;i<1000000;++i)
+			A = A + B;
+
+	QueryPerformanceCounter(&T1);
+	float elapsed_timeA = (float)(T1.QuadPart - T0.QuadPart) / (float)F.QuadPart;
+
+	char buffer[255];
+	sprintf(buffer,"%.2f s" , elapsed_timeA);
+	AfxMessageBox(buffer);
+	*/
+
 	vec3 A = vec3(1,1,1);
 	vec3 B = vec3(2,-1,-2);
 
@@ -123,19 +146,95 @@ void CraytDlg::OnBnClickedTestSse()
 	LARGE_INTEGER F,T0,T1;   // address of current frequency
 	QueryPerformanceFrequency(&F);
 	QueryPerformanceCounter(&T0);
-	for(int i=0;i<10000000;++i)
-		CrossProduct( C , D);
+	
+	for(int j=0;j<10;++j)
+		for(int i=0;i<1000000;++i)
+		sse_cross( C , D);
+
 	QueryPerformanceCounter(&T1);
 	float elapsed_timeA = (float)(T1.QuadPart - T0.QuadPart) / (float)F.QuadPart;
 	T0 = T1;
-	for(int i=0;i<10000000;++i)
-		cross( A , B);
+
+	for(int j=0;j<10;++j)
+	for(int i=0;i<1000000;++i)
+		cross(A,B);
+
+	QueryPerformanceCounter(&T1);
+	float elapsed_timeB = (float)(T1.QuadPart - T0.QuadPart) / (float)F.QuadPart;
+	
+
+	char buffer[255];
+	sprintf(buffer,"Fast= %.2f s       Normal=%.2f s" , elapsed_timeA,elapsed_timeB);
+	AfxMessageBox(buffer);
+
+}
+
+
+
+void CraytDlg::OnBnClickedTestSse2()
+{
+	vec3 A = vec3(1,1,1);
+	vec3 B = vec3(2,-1,-2);
+
+	__m128 C = _mm_setr_ps(1,1,1,0);
+	__m128 D = _mm_setr_ps(2,-1,-2,0);
+	
+
+	LARGE_INTEGER F,T0,T1;   // address of current frequency
+	QueryPerformanceFrequency(&F);
+	QueryPerformanceCounter(&T0);
+
+	for(int j=0;j<100;++j)
+	for(int i=0;i<1000000;++i)
+		_mm_dp_ps(C,D,0x7F);
+
+	QueryPerformanceCounter(&T1);
+	float elapsed_timeA = (float)(T1.QuadPart - T0.QuadPart) / (float)F.QuadPart;
+	T0 = T1;
+
+	for(int j=0;j<100;++j)
+	for(int i=0;i<1000000;++i)
+		dot(A,B);
+
 	QueryPerformanceCounter(&T1);
 	float elapsed_timeB = (float)(T1.QuadPart - T0.QuadPart) / (float)F.QuadPart;
 
+
 	char buffer[255];
-	sprintf(buffer,"Fast= %g s       Normal=%g s" , elapsed_timeA,elapsed_timeB);
+	sprintf(buffer,"Fast= %.2f s       Normal=%.2f s" , elapsed_timeA,elapsed_timeB);
 	AfxMessageBox(buffer);
+}
 
 
+void CraytDlg::OnBnClickedTestTexture()
+{
+
+	CDC *pDC = GetDC();
+	LARGE_INTEGER F,T0,T1;   // address of current frequency
+	QueryPerformanceFrequency(&F);
+	QueryPerformanceCounter(&T0);
+//	motor.tx.DrawSurface(pDC,0,10,10,1);
+
+	motor.tx.DrawSurface(pDC,0,10,10,1);
+	motor.tx.DrawSurface(pDC,1,310,10,1);
+	motor.tx.DrawSurface(pDC,2,520,10,1);
+	motor.tx.DrawSurface(pDC,3,620,10,1);
+	motor.tx.DrawSurface(pDC,4,700,10,1);
+	motor.tx.DrawSurface(pDC,5,740,10,1);
+	motor.tx.DrawSurface(pDC,6,780,10,1);
+	motor.tx.DrawSurface(pDC,7,800,10,1);
+
+//	for(int i=0;i<8;++i)
+//		motor.tx.Draw(pDC,i,0,0,400,300,1);
+
+	//motor.tx.Draw(pDC,0,0,0,400,300,1);
+	//motor.tx.Draw(pDC,5,600,0,400,300,1);
+
+	QueryPerformanceCounter(&T1);
+	float elapsed_timeA = (float)(T1.QuadPart - T0.QuadPart) / (float)F.QuadPart;
+	char buffer[255];
+	sprintf(buffer,"%.2f s" , elapsed_timeA);
+	//AfxMessageBox(buffer);
+
+	ReleaseDC(pDC);
 }

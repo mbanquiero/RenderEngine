@@ -9,7 +9,7 @@ vec3::vec3(float a,float b, float c)
 	z = c;
 }
 
-vec3 vec3::operator+(vec3 &q)
+vec3 vec3::operator+(const vec3 &q)
 {
 	return(vec3(x+q.x,y+q.y,z+q.z));
 }
@@ -188,6 +188,16 @@ vec4::vec4(float a,float b, float c,float d)
 	w = d;
 }
 
+// escalar x vector
+vec4 vec4::operator*(float k)
+{
+	return(vec4(k*x,k*y,k*z,k*w));
+}
+
+vec4 vec4::operator+(const vec4 &q)
+{
+	return(vec4(x+q.x,y+q.y,z+q.z,w+q.w));
+}
 
 mat4::mat4(	float a11,float a12, float a13,float a14,
 		   float a21,float a22, float a23,float a24,
@@ -315,4 +325,84 @@ bool box_overlap(vec3 Amin,vec3 Amax,vec3 Bmin,vec3 Bmax )
 	return true;			// overlap
 }
 
+
+void sort(float *v,int cant)
+{
+	for(int i=0;i<cant-1;++i)
+		for(int j=i+1;j<cant;++j)
+			if(v[j]<v[i])
+				swap(&v[j],&v[i]);
+}
+
+
+/*
+struct Ray
+{
+	float ox, oy, oz, ow;
+	float dx, dy, dz, dw;
+};
+
+struct PrecomputedTriangle
+{
+	float nx, ny, nz, nd;
+	float ux, uy, uz, ud;
+	float vx, vy, vz, vd;
+};
+
+struct Hit
+{
+	float px, py, pz, pw;
+	float t, u, v;
+};
+
+const float int_coef_arr[4] = { -1, -1, -1, 1 };
+
+const __m128 int_coef = _mm_load_ps(helper);
+
+bool Intersect(const Ray &r,
+			   const PrecomputedTriangle &p, Hit &h)
+{
+	const __m128 o = _mm_load_ps(&r.ox);
+	const __m128 d = _mm_load_ps(&r.dx);
+	const __m128 n = _mm_load_ps(&p.nx);
+	const __m128 det = _mm_dp_ps(n, d, 0x7f);
+	const __m128 dett = _mm_dp_ps(
+		_mm_mul_ps(int_coef, n), o, 0xff);
+	const __m128 oldt = _mm_load_ss(&h.t);
+	if((_mm_movemask_ps(_mm_xor_ps(dett,
+		_mm_sub_ss(_mm_mul_ss(oldt, det), dett)))&1) == 0)
+	{
+		const __m128 detp = _mm_add_ps(_mm_mul_ps(o, det),
+			_mm_mul_ps(dett, d));
+		const __m128 detu = _mm_dp_ps(detp,
+			_mm_load_ps(&p.ux), 0xf1);
+		if((_mm_movemask_ps(_mm_xor_ps(detu,
+			_mm_sub_ss(det, detu)))&1) == 0)
+		{
+			const __m128 detv = _mm_dp_ps(pt,
+				_mm_load_ps(&p.vx), 0xf1));
+			if((_mm_movemask_ps(_mm_xor_ps(detv,
+				_mm_sub_ss(det, _mm_add_ss(detu, detv))))&1) == 0)
+			{
+				const __m128 inv_det = inv_ss(det);
+				_mm_store_ss(&h.t, _mm_mul_ss(dett, inv_det));
+				_mm_store_ss(&h.u, _mm_mul_ss(detu, inv_det));
+				_mm_store_ss(&h.v, _mm_mul_ss(detv, inv_det));
+				_mm_store_ps(&h.px, _mm_mul_ps(detp,
+					_mm_shuffle_ps(inv_det, inv_det, 0)));
+				return true;
+			}
+		}
+	}
+	return false;
+}
+*/
+
+int upper_power2(int x)
+{
+	int power = 1;
+	while(power < x)
+		power*=2;
+	return power;
+}
 

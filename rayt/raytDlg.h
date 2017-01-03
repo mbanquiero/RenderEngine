@@ -31,4 +31,6 @@ protected:
 public:
 	afx_msg void OnBnClickedOk();
 	afx_msg void OnBnClickedTestSse();
+	afx_msg void OnBnClickedTestSse2();
+	afx_msg void OnBnClickedTestTexture();
 };
